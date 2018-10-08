@@ -1,0 +1,5 @@
+In this directory there are finished scripts and small projects.
+They are meant to be found in ~/Skripte with their appropriate
+neighbourhood.
+If you want to add them to the path, create a link (symlink is enough)
+in ~/Skripte/execs_for_path

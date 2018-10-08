@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# A random text generator. 
+# Usage : 
+# loremipsum -h:                    show help
+# loremipsum -l <nr> <outputfile>   write <nr> lines of random
+#                                   text to <outputfile>.
+#                                   Default: 100 lines
+#                                   Max: 301 lines.
+
+sourcetext="material/loremipsumsource.txt"
+
+maxlines=`wc -l $sourcetext | awk {'print $1'}`
+nroflines=100
+outputfile='nooutputfilespecified'
+
+while [ $# -gt 0 ]; do
+    case $1 in
+    -h | --help)
+    echo " A random text generator."
+    echo
+    echo " USAGE : "
+    echo " loremipsum [OPTION] [outputfile]"
+    echo
+    echo ' This script will write per default 100 lines of random text.' 
+    echo ' If <outputfile> is specified, it will write it to that file instead.'
+    echo
+    echo " OPTIONS"
+    echo " loremipsum -h or --help       show this help"
+    echo " loremipsum -l <nr>            write <nr> lines of random text"
+    echo "                               Default: 100 lines"
+    echo "                               Max: " $maxlines " lines."
+    exit
+    ;;
+
+    -l)
+    if [ "$2" -gt "$maxlines" ]; then 
+        echo "I don't have that many lines. Taking 100."
+    else
+        nroflines=$2
+    fi
+    shift
+    ;;
+
+    *)
+    outputfile=$1
+    ;;
+
+    esac    
+   
+    shift
+done
+
+
+if [ "$outputfile" == 'nooutputfilespecified' ]; then
+    head -n $nroflines $sourcetext
+else 
+    head -n $nroflines $sourcetext >> $outputfile
+    echo "Random word file written to " $outputfile
+fi
+
+

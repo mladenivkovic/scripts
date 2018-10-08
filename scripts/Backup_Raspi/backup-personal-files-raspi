@@ -1,0 +1,46 @@
+#!/bin/bash
+
+DESTDIR='mivkov@192.168.0.5:/media/extHDD_Backup1/'
+SCRIPTDIR='/home/mivkov/Skripte/Backup_Raspi'
+
+
+echo "---Backup started---"
+
+#Backup personal files
+rsync -h --progress --stats -r -t --modify-window=1 -l -D --super --update --delete-after --delete-excluded --exclude=**/*tmp*/ --exclude=**/*cache*/ --exclude=**/*Cache*/ --exclude=**~ --exclude=/mnt/*/** --exclude=/media/*/** --exclude=**/lost+found*/ --exclude=**/*Trash*/ --exclude=**/*trash*/ --exclude=**/.gvfs/ --exclude=/home/mivkov/Downloads --exclude=/mivkov/Downloads/** --log-file="$SCRIPTDIR"/Logs/rsync-backup-"$DATE"-private.log /home/mivkov "$DESTDIR"
+
+# backup /etc
+rsync -h --progress --stats -r -t --modify-window=1 -l -D --super --update --delete-after --delete-excluded --exclude=**/*tmp*/ --exclude=**/*cache*/ --exclude=**/*Cache*/ --exclude=**~ --exclude=**/*Trash*/ --exclude=**/*trash*/ --log-file="$SCRIPTDIR"/Logs/rsync-backup-"$DATE"-etc.log /etc "$DESTDIR"/root
+
+#backing up package lists
+#https://wiki.ubuntuusers.de/Paketverwaltung/Tipps/#Paketliste-zur-Wiederherstellung-erzeugen
+
+#create lists
+
+echo "creating package lists"
+dpkg --get-selections | awk '!/deinstall|purge|hold/ {print $1}' > "$SCRIPTDIR"/packages.list.save
+apt-mark showauto > "$SCRIPTDIR"/package-states-auto
+apt-mark showmanual > "$SCRIPTDIR"/package-states-manual
+find /etc/apt/sources.list* -type f -name '*.list' -exec bash -c 'echo -e "\n## $1 ";grep "^[[:space:]]*[^#[:space:]]" ${1}' _ {} \; > "$SCRIPTDIR"/sources.list.save
+
+#copy lists
+echo "copying package lists"
+scp "$SCRIPTDIR"/packages.list.save "$DESTDIR"/package_lists/
+scp "$SCRIPTDIR"/package-states-auto "$DESTDIR"/package_lists/
+scp "$SCRIPTDIR"/package-states-manual "$DESTDIR"/package_lists/
+scp "$SCRIPTDIR"/sources.list.save "$DESTDIR"/package_lists/
+
+
+scp /etc/apt/trusted.gpg "$DESTDIR"/package_lists/trusted-keys.gpg 
+scp -R /etc/apt/trusted.gpg.d "$DESTDIR"/package_lists/trusted.gpg.d.save 
+scp /etc/apt/auth.conf "$DESTDIR"/package_lists/auth.conf 
+
+echo "removing temporary package lists"
+rm "$SCRIPTDIR"/packages.list.save
+rm "$SCRIPTDIR"/package-states-auto
+rm "$SCRIPTDIR"/package-states-manual
+rm "$SCRIPTDIR"/sources.list.save
+
+echo "done!"
+
+exit 0
