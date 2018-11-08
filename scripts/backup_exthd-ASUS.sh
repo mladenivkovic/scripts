@@ -14,7 +14,7 @@ echo "Started backup private files"
 echo "====================================="
 #Private files
 
-rsync -a -h --progress --stats  -r -t -D -l --update --delete-before --delete-excluded --exclude=**/*tmp*/ --exclude=**/*cache*/ --exclude=**/*Cache*/ --exclude=**~ --exclude=/mnt/*/** --exclude=/media/*/** --exclude=**/lost+found*/ --exclude=**/*Trash*/ --exclude=**/*trash*/ --exclude=**/.gvfs/ --exclude=/mivkov/Downloads/**   --log-file=/home/mivkov/Skripte/Backup_ExtHD/Logs/rsync-backup-private-"$DATE"".log" $DIR_TO_BACKUP $BACKUP_DIR 
+rsync -a -h --progress --stats  -r -t -D -l --update --delete-before --delete-excluded --exclude=**/*tmp*/ --exclude=**/*cache*/ --exclude=**/*Cache*/ --exclude=**~ --exclude=/mnt/*/** --exclude=/media/*/** --exclude=**/lost+found*/ --exclude=**/*Trash*/ --exclude=**/*trash*/ --exclude=**/.gvfs/ --exclude=/mivkov/Downloads/**   --log-file=Logs/rsync-backup-private-"$DATE"".log" $DIR_TO_BACKUP $BACKUP_DIR 
 
 
 echo "====================================="
@@ -31,7 +31,7 @@ echo "====================================="
 #
 dest="/media/mivkov/NTFS-Backup/"
 
-rsync -rltDvu --modify-window=1 --progress --delete-before --delete-excluded --log-file=/home/mivkov/Skripte/Backup_ExtHD/Logs/rsync-backup-ntfs-"$DATE".log --exclude=/home/mivkov/UZH/Masterarbeit/masterarbeit/exec/** /home/mivkov/UZH /home/mivkov/Skripte /home/mivkov/Coding /home/mivkov/Documents /home/mivkov/Desktop /home/mivkov/.thunderbird /home/mivkov/EPFL /home/mivkov/Zotero /home/mivkov/Calibre "$dest"
+rsync -rltDvu --modify-window=1 --progress --delete-before --delete-excluded --log-file=Logs/rsync-backup-ntfs-"$DATE".log --exclude=/home/mivkov/UZH/Masterarbeit/masterarbeit/exec/** /home/mivkov/UZH /home/mivkov/Skripte /home/mivkov/Coding /home/mivkov/Documents /home/mivkov/Desktop /home/mivkov/.thunderbird /home/mivkov/EPFL /home/mivkov/Zotero /home/mivkov/Calibre "$dest"
 
 
 echo "---Backup ended---"
