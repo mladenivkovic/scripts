@@ -14,10 +14,11 @@ Usage:
 """
 
 from pNbody import *
-import sys
 from h5py import File
 from sys import argv
 import numpy as np
+from os import path
+
 
 # number of particle type
 N_type = 6
@@ -33,22 +34,24 @@ def get_filenames():
     """
 
     try:
-        file_in = sys.argv[1]
+        file_in = argv[1]
     except IndexError:
         print(usage)
         quit()
 
     try:
-        file_out = sys.argv[2]
+        file_out = argv[2]
     except IndexError:
+        # If no second file was given, generate file_out filename
+        # assume suffix is after last period in filename
         cut = 0
-        append = '-SWIFT'
+        append = '-SWIFT.hdf5'
         for i in range(len(file_in)):
             if file_in[-i-1] == '.':
                 cut = len(file_in)-i-1
                 break
         if cut > 0:
-            file_out = file_in[:cut]+append+file_in[cut:]
+            file_out = file_in[:cut]+append
         else:
             file_out = file_in+append
 
@@ -70,17 +73,6 @@ def fix_particle_types(file_out):
     it.
     """
 
-    f = File(file_out)
-
-    changeType(f, 2, 1)
-    changeType(f, 3, 1)
-    changeType(f, 4, 1)
-
-    countPart(f)
-
-    f.close()
-
-
     #--------------------------------------------------------------
     def groupName(part_type):
         return "PartType%i" % part_type
@@ -89,12 +81,21 @@ def fix_particle_types(file_out):
 
     #--------------------------------------------------------------
     def changeType(f, old, new):
+        """
+        Change particle types in the file f.
+        """
 
         # check if directory exists
         old_group = groupName(old)
 
         if old_group not in f:
-            raise IOError("Cannot find group '%s'" % old)
+            while True:
+                ans = input("Changing particle types - cannot find group '%s' ; Should I continue? [y/n] " % old)
+                if ans=='y' or ans == 'Y':
+                    return
+                elif ans == 'n' or ans == 'N':
+                    raise IOError("Cannot find group '%s'" % old)
+
         old = f[old_group]
 
         new_group = groupName(new)
@@ -104,7 +105,7 @@ def fix_particle_types(file_out):
 
         new = f[new_group]
 
-
+        print('check')
         for name in old:
             if debug:
                 print("Moving '%s' from '%s' to '%s'"
@@ -130,9 +131,11 @@ def fix_particle_types(file_out):
     #--------------------------------------------------------------
 
 
-
     #--------------------------------------------------------------
     def countPart(f):
+        """
+        Count particles again.
+        """
 
         npart = []
 
@@ -154,30 +157,110 @@ def fix_particle_types(file_out):
     #--------------------------------------------------------------
 
 
+
+
+    f = File(file_out)
+
+    changeType(f, 2, 1)
+    changeType(f, 3, 1)
+    changeType(f, 4, 1)
+    changeType(f, 5, 1)
+
+    # Re-count particles properly
+    countPart(f)
+
+    f.close()
+    print("Finished changing SWIFT-type file appropriately for use.")
+
+
+
     return
 
 
-from pNbody import Nbody
-from sys import argv
-from os import path
-import numpy as np
 
 
 
-def convert_gadget_to_swift(file_in):
+#===================================================
+def convert_gadget_to_swift(file_in, file_out):
+#===================================================
+    """
+    Converts a non-hdf5 type gadget2 IC file to the SWIFT
+    format.
+    (it should also work with hdf5-type gadget files, 
+    pNbody should figure out the initial file type by itself)
+    """
 
-    filename = argv[-1]
 
-
-    nb = Nbody(filename, ftype="gadget")
-    #test = np.logical_and(nb.tpe == 0, nb.u == 0.)
-    #nb = nb.selectc(np.logical_not(test))
+    nb = Nbody(file_in, ftype="gadget")
 
     # change ftype
     nb = nb.set_ftype("swift")
 
+
+
+    # Set units if necessary
+
+    # wont work this way. Do unit setting manually.
+    #  nb.set_local_system_of_units(UnitLength_in_cm=1,UnitVelocity_in_cm_per_s=1,UnitMass_in_g=1)
+
+    units = ["UnitLength_in_cm", "UnitVelocity_in_cm_per_s", "UnitMass_in_g"]
+    unitd = nb.unitsparameters.get_dic()
+    print("WARNING:")
+    print("This script assumes gadget default units, which are:")
+    for u in units:
+        print("{0:30}{1:12.4E}".format(u, unitd[u]))
+
+    while True:
+        ans = input("Do you wish to change them manually? [y/n] ")
+        if ans=='y' or ans == 'Y':
+            i = 0
+            while i<len(units):
+                u = units[i]
+                inp = input("Enter a value for "+u+": [leave empty to keep] ")
+                try:
+                    val = float(inp)
+                except ValueError:
+                    if (inp==""):
+                        i+=1
+                        continue
+                    else:
+                        print("Didn't understand input. Try again.")
+                        continue
+                nb.unitsparameters.set(u, val)
+                i+=1
+            print("Units are now:")
+            for u in units:
+                unitd = nb.unitsparameters.get_dic()
+                print("{0:30}{1:12.4E}".format(u, unitd[u]))
+                
+            break
+        elif ans == 'n' or ans == 'N':
+            break
+    
+
     # set default parameters
-    nb.boxsize = 1.2 * (nb.pos.max() - nb.pos.min())
+    boxsizeguess =  1.2 * (nb.pos.max() - nb.pos.min())
+
+    print("WARNING:")
+    print("This script made a guess for the boxsize, which is ", boxsizeguess)
+
+    while True:
+        ans = input("Do you wish to change them manually? [y/n] ")
+        if ans=='y' or ans == 'Y':
+            inp = input("Enter a value for the boxsize: ")
+            try:
+                val = float(inp)
+            except ValueError:
+                print("Didn't understand input. Try again.")
+                continue
+            nb.boxsize = val
+            break
+
+        elif ans == 'n' or ans == 'N':
+            nb.boxsize = boxsizeguess 
+            break
+
+
     nb.periodic = 0
     nb.flag_entropy_ics = 0
 
@@ -186,17 +269,19 @@ def convert_gadget_to_swift(file_in):
     nb.rsp = hsml
 
     # write new file
-    filename = path.splitext(filename)[0]
-    nb.rename(filename + ".hdf5")
+    nb.rename(file_out)
 
     nb.write()
+    print("Written SWIFT-type file ", file_out)
+
+    return
 
 
-
+#==================================
 if __name__ == "__main__":
+#==================================
 
     file_in, file_out = get_filenames()
-
-
-
+    convert_gadget_to_swift(file_in, file_out)
+    fix_particle_types(file_out)
 
