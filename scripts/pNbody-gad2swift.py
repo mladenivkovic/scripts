@@ -1,4 +1,17 @@
 #!/usr/bin/python3
+#  This script converts a gadget2 (non-hdf5) type initial condition file
+#  (e.g. made with MUSIC) to a swift type IC file.
+#  Needs pNbody to be installed.
+#
+#
+#  It first saves the gadget IC file as a SWIFT type file. In a second step,
+#  the newly created .hdf5 file is read back in and the particle types are
+#  sorted out correctly.
+#
+#
+#  Based on scripts written by Loic Hausammann.
+#  Put together in this form by Mladen Ivkovic, Dec 2018
+
 
 usage="""
 This script converts a gadget2 (non-hdf5) type initial condition file
@@ -90,7 +103,9 @@ def fix_particle_types(file_out):
 
         if old_group not in f:
             while True:
-                ans = input("Changing particle types - cannot find group '%s' ; Should I continue? [y/n] " % old)
+                print("Changing particle types - cannot find group '%s'" % old)
+                print(" This is fine if your gadget file didn't contain any particles of that type.")
+                ans = input("Should I continue? [y/n] ")
                 if ans=='y' or ans == 'Y':
                     return
                 elif ans == 'n' or ans == 'N':
@@ -243,6 +258,9 @@ def convert_gadget_to_swift(file_in, file_out):
 
     print("WARNING:")
     print("This script made a guess for the boxsize, which is ", boxsizeguess)
+    print("If that is not correct, the computed density parameters Omega ")
+    print("will be different from the ones in your MUSIC config file, and SWIFT")
+    print("might not run if you specified the wrong density parameters in your SWIFT parameter file.")
 
     while True:
         ans = input("Do you wish to change them manually? [y/n] ")
