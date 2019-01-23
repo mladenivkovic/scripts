@@ -14,12 +14,13 @@ import os
 #---------------------------
 # global vars
 #---------------------------
-ncpu = 1
-outnr = None
-outputdir = None
-verbose = False
+ncpu             = 1
+outnr            = None
+outputdir        = None
+verbose          = False
+identical_masses = False  
 
-
+np.warnings.filterwarnings('ignore') # ignore 'empty file' warnings
 
 #---------------------------
 # Datatypes
@@ -93,7 +94,7 @@ def check_prog_metadata():
     #      levprint(0, "finished progenitor metadata check.")
     #      return
     fnames = [ os.path.join(outputdir, "debug_mtree-unbinding_dump_after.txt"+str(cpu+1).zfill(5)) for cpu in range(ncpu)]
-    ids = [np.loadtxt(f, skiprows=2, usecols=[0], unpack=True, dtype=np.int) for f in fnames]
+    ids = [np.atleast_1d(np.loadtxt(f, skiprows=2, usecols=[0], unpack=True, dtype=np.int)) for f in fnames]
     ids = np.concatenate(ids)
     ids = np.unique(ids)
 
@@ -113,15 +114,45 @@ def check_prog_metadata():
     #----------------------------------------------------------------------------------
 
     files = [debfile('WRITTEN_PROGENITOR_DATA', cpu+1) for cpu in range(ncpu)]
-    allfiles = [np.loadtxt(f, skiprows=2, usecols=[0,3], dtype=np.int) for f in files]
-    written_data = np.concatenate(allfiles)
+    allfiles = np.array([np.loadtxt(f, skiprows=2, usecols=[0,3], dtype=np.int, ndmin=2) for f in files])
+    nonempty = []
+    for f in allfiles:
+        if f.size > 0:
+            nonempty.append(f)
+    written_data = np.concatenate(nonempty)
 
     pint = np.sum(written_data[:,1])+2*written_data.shape[0]
-    if pint != nprogs_written:
+    if pint != prog_ints:
         levprint(2, "ERROR: progenitorcount_written is", prog_ints, "should be", pint, "after recounting prog data dump")
 
     if verbose:
         levprint(1, "finished.")
+
+
+
+    
+    #----------------------------------------------------------------------------------
+    if verbose:
+        levprint(1, "Checking if past merged metadata is consistent with written data")
+    #----------------------------------------------------------------------------------
+
+    files = [debfile('WRITTEN_PAST_MERGED_PROGENITOR_DATA', cpu+1) for cpu in range(ncpu)]
+    allfiles = [np.loadtxt(f, skiprows=2, usecols=[0,3], dtype=np.int) for f in files]
+    written_data = np.concatenate(allfiles)
+
+    pmprogs = written_data.shape[0]
+    if pmprogs != npmprogs:
+        levprint(2, "ERROR: npmprogs is", npmprogs, "should be", pmprogs, "after recounting pmprog data dump")
+
+    if verbose:
+        levprint(1, "finished.")
+
+   
+
+
+
+
+
 
 
     levprint(0, "finished progenitor metadata check.")
@@ -163,20 +194,26 @@ def check_unbinding():
     if verbose:
         levprint(1, 'finished.')
         levprint(1, 'testing particle counts')
-        levprint(2, 'testing sum all local particles = total particles')
 
-    locals_tot = np.zeros(unb_after_ids.shape, dtype=np.int)
-    for i, ind in enumerate(inv):
-        locals_tot[ind] += unb_after[i]['npown']
-        if unb_after_ids[ind] != unb_after[i]['id'] :
-            print("ERROR")
+    if identical_masses:
+        if verbose:
+            levprint(2, 'testing sum all local particles = total computed particles')
 
-    for i, ind in enumerate(unb_after_ids):
-        if locals_tot[i] != unb_after[id_ind[i]]['npcomp']:
-            levprint(2, "error in sum over local owned particles compared to total computed particles \n\tclump id", ind, "\t", "sum:", locals_tot[i],"\t", "computed from excl mass:", unb_after[id_ind[i]]['npcomp'])
+        locals_tot = np.zeros(unb_after_ids.shape, dtype=np.int)
+        for i, ind in enumerate(inv):
+            locals_tot[ind] += unb_after[i]['npown']
+            if unb_after_ids[ind] != unb_after[i]['id'] :
+                print("ERROR")
 
-    if verbose:
-        levprint(2, 'finished.')
+        for i, ind in enumerate(unb_after_ids):
+            if locals_tot[i] != unb_after[id_ind[i]]['npcomp']:
+                levprint(2, "error in sum over local owned particles compared to total computed particles \n\tclump id", ind, "\t", "sum:", locals_tot[i],"\t", "computed from excl mass:", unb_after[id_ind[i]]['npcomp'])
+
+        if verbose:
+            levprint(2, 'finished.')
+    else:
+        if verbose:
+            levprint(2, 'skipping sum local particles = total computed from mass because non-identical particle masses')
 
 
 
@@ -189,18 +226,90 @@ def check_unbinding():
         levprint(2, 'finished.')
 
 
-    if verbose:
-        levprint(2, 'testing nclmpparttot >= npart computed from mass')
-    for u in unb_after :
-        if u['npcomp'] > u['nclmpparttot']:
-            levprint(2, "error: npart computed from mass > nclmpparttot for clump ", u['id'])
-    if verbose:
-        levprint(2, 'finished.')
+    if identical_masses:
+        if verbose:
+            levprint(2, 'testing nclmpparttot >= npart computed from mass')
+        for u in unb_after :
+            if u['npcomp'] > u['nclmpparttot']:
+                levprint(2, "error: npart computed from mass > nclmpparttot for clump ", u['id'])
+        if verbose:
+            levprint(2, 'finished.')
+    else:
+        levprint(2, 'skipping test nclmparttot >= npart computed from mass because non-identical particle masses')
 
 
     levprint(0, "finished unbinding check.")
 
     return
+
+
+
+#===================================
+def check_particle_masses():
+#===================================
+    """
+    Check whether particles have identical masses
+    """
+    import scipy.io
+
+    levprint(0,"Checking for identical particle masses")
+
+    mpart = None
+
+    for cpu in range(ncpu):
+        srcfile = outputdir+'/part_'+str(outnr).zfill(5)+'.out'+str(cpu+1).zfill(5)
+        if verbose:
+            levprint(1, "Looking through file", srcfile)
+
+        ffile = scipy.io.FortranFile(srcfile, 'r')
+
+        #-----------------------
+        # First read headers
+        #-----------------------
+
+        ncpu_f      = ffile.read_ints()
+        ndim        = ffile.read_ints()
+        nparts      = ffile.read_ints()
+        localseed   = ffile.read_ints()
+        nstar_tot   = ffile.read_ints()
+        mstar_tot   = ffile.read_reals('d')
+        mstar_lost  = ffile.read_reals('d')
+        nsink       = ffile.read_ints()
+
+        del ncpu_f, ndim, localseed, nstar_tot, mstar_tot, mstar_lost, nsink # don't need this stuff
+
+        # m = np.empty(nparts, dtype=np.float)
+
+
+        #----------------------
+        # Read particle data
+        #----------------------
+
+        m = ffile.read_reals('d') # x
+        m = ffile.read_reals('d') # y
+        m = ffile.read_reals('d') # z
+        m = ffile.read_reals('d') # vx
+        m = ffile.read_reals('d') # vy
+        m = ffile.read_reals('d') # vz
+        m = ffile.read_reals('d') # mass
+        ffile.close()
+
+        masses = np.unique(m)
+        if masses.shape[0] > 1 :
+            levprint(2, "WARNING: found non-identical masses:", masses)
+            levprint(1, "finished.")
+            return False
+        
+        if mpart is None:
+            mpart = masses
+        else:
+            if mpart[0] != masses[0]:
+                levprint(2, "WARNING: found non-identical masses:", masses[0], mpart[0])
+                levprint(1, "finished.")
+                return False
+
+    return True
+
 
 
 
@@ -228,8 +337,6 @@ def levprint(level=0, *obj):
     
 
 
-
-
 #============================
 def read_cmdlineargs():
 #============================
@@ -250,8 +357,10 @@ def read_cmdlineargs():
     verbose = args.verbose
 
     if 'output_' in output_number:
+        if output_number[-1] == "/":
+            output_number = output_number[:-1]
         outputdir = output_number
-        outnr = int(output_number[:-5])
+        outnr = int(output_number[-5:])
     else:
         try:
             outnr = int(output_number)
@@ -314,7 +423,7 @@ def unbread(name, cpu):
             encoding='utf8',
             unpack=True
             )
-    return res
+    return np.atleast_1d(res)
 
 
 
@@ -327,9 +436,12 @@ def main():
     Main calling sequence.
     """
 
+    global identical_masses
+
     read_cmdlineargs()
     read_info_file()
 
+    identical_masses = check_particle_masses()
     check_unbinding()
     check_prog_metadata()
 
