@@ -37,6 +37,210 @@ udtp = np.dtype([   ('id' , 'i'),
                     ('nclmppart', 'i'),
                     ('nclmpparttot', 'i') ])
 
+#==================================
+def check_mostbounds():
+#==================================
+    """
+    check whether the most_bound particle lists correspond to the
+    particle lists that are written in progenitor particle lists
+    """
+
+    levprint(0, 'Checking most_bound lists.')
+
+    nmost_bound = 0
+    nmlist = os.path.join(outputdir, 'namelist.txt')
+
+    if os.path.exists(nmlist):
+        f = open(nmlist, 'r')
+        for line in f.readlines():
+            if 'nmost_bound' in line:
+                nmb, eq, rest = line.partition("=")
+                nmost_bound = int(rest.split()[0])
+        f.close()
+
+    if nmost_bound == 0:
+        levprint(1, "Didn't find nmost_bound in namelist. Setting nmost_bound to default value 200")
+        nmost_bound = 200
+
+   
+    for cpu in range(ncpu):
+
+        myid = cpu+1
+
+        #-----------------------------------------
+        # Read in mostbound_particles data
+        #-----------------------------------------
+
+        mbl = np.loadtxt(debfile('mostbound_particles', myid), skiprows=1, dtype=np.int)
+
+        # check for virtuals in mostbound_particles without local mostbound particles
+        to_remove = []
+        for i in range(mbl.shape[0]):
+            if mbl[i, 0] == -1:
+                if mbl[i,2] < 1:
+                    levprint(2, "WARNING: found halo with no local particles but excl_mass > 0 on myid", myid)
+                to_remove.append(i)
+        # remove unnecessary lines from data
+        if len(to_remove) > 0:
+            mbl = np.delete(mbl, np.array(to_remove), axis=0)
+
+        nprogs = mbl.shape[0]
+
+        #-----------------------------------------
+        # Read in WRITTEN_PROGENITOR_DATA data
+        #-----------------------------------------
+        progfile = debfile('WRITTEN_PROGENITOR_DATA', myid)
+        f = open(progfile, 'r')
+        proglines = f.readlines()
+
+        pnprogs = len(proglines) - 2
+
+        pclid = np.empty(pnprogs, dtype=np.int)
+        pnp   = np.empty(pnprogs, dtype=np.int)
+        pgal  = np.empty(pnprogs, dtype=np.int)
+        ppart = np.zeros((pnprogs,nmost_bound), dtype=np.int)
+
+        for i in range(pnprogs):
+            linedata = proglines[i+2].split()
+            pclid[i] = int(linedata[0])
+            pnp[i] = int(linedata[3])
+            g = int(linedata[4])
+            if g<0:
+                pgal[i] = g
+                # replace positive value for particle to compare with mostbound_particles output
+                linedata[4] = str(-g)
+            else:
+                pgal[i] = 0
+
+            for j, p in enumerate(linedata[4:]):
+                ppart[i,j] = int(p)
+
+
+        
+        #--------------------------------
+        # PERFORM CHECKS
+        #--------------------------------
+
+        # check for correct galaxies in mostbound_particles
+        for i in range(nprogs):
+            if mbl[i,2] == 1: # first_bound = 1
+                if mbl[i,3]  > 0:
+                    levprint(2, "ERROR: first_bound=1, but no galaxy for Clump ID", mld[i,0], "on myid=", myid)
+
+        # check that you have the same number of progenitors
+        if pnprogs != nprogs:
+            levprint(2, "ERROR: Not equal number of progenitors in WRITTEN_PROGENITOR_DATA (", pnprogs, 
+            ") and mostbound_particles (", nprogs, ") files for myid", myid)
+        progmin = min(nprogs, pnprogs)
+        if nprogs > pnprogs:
+            levprint(2, "WARNING: won't fully check mostbound_particles file because nprogs > pnprogs")
+        if nprogs < pnprogs:
+            levprint(2, "WARNING: won't fully check WRITTEN_PROGENITOR_DATA file because nprogs < pnprogs")
+
+
+        # check that number of particles is correct
+        for i in range(progmin):
+            np_mbl = 0
+            np_pw = 0
+            for j in range(nmost_bound):
+                if mbl[i, j+4] > 0:
+                    np_mbl += 1
+                if ppart[i, j] > 0:
+                    np_pw += 1
+
+            if np_mbl != mbl[i,1]:
+                levprint(2, "ERROR: incorrect number of particles in mostbound_particles for clump", mbl[i,0], "at myid", myid)
+            if np_pw != pnp[i]:
+                levprint(2, "ERROR: incorrect number of particles in WRITTEN_PROGENITOR_DATA for clump", pclid[i], "at myid", myid)
+
+
+        # check for identical clump IDs and identical particles
+        for i in range(progmin):
+            if mbl[i,0] != pclid[i]:
+                levprint(2, "ERROR: Not identical clump IDs found for myid", myid, ":", mbl[i,0], " in mostbound_particles and", pclid[i], "WRITTEN_PROGENITOR_DATA")
+            else:
+                add = 0
+                for j in range(nmost_bound):
+                    while (mbl[i, 4+j+add] == 0) and (j+add < nmost_bound-1):
+                        add += 1
+                    if ppart[i,j] != mbl[i, j+4+add]:
+                        levprint(2, "ERROR: Not identical particles for clump", pclid[i], "on myid", myid, ppart[i,j], mbl[i, j+4+add])
+                    if j+add == nmost_bound-1:
+                        break
+
+    levprint(0, "finished most_bound check.")
+
+
+    return
+
+
+#===================================
+def check_particle_masses():
+#===================================
+    """
+    Check whether particles have identical masses
+    """
+    import scipy.io
+
+    levprint(0,"Checking for identical particle masses")
+
+    mpart = None
+
+    for cpu in range(ncpu):
+        srcfile = outputdir+'/part_'+str(outnr).zfill(5)+'.out'+str(cpu+1).zfill(5)
+        if verbose:
+            levprint(1, "Looking through file", srcfile)
+
+        ffile = scipy.io.FortranFile(srcfile, 'r')
+
+        #-----------------------
+        # First read headers
+        #-----------------------
+
+        ncpu_f      = ffile.read_ints()
+        ndim        = ffile.read_ints()
+        nparts      = ffile.read_ints()
+        localseed   = ffile.read_ints()
+        nstar_tot   = ffile.read_ints()
+        mstar_tot   = ffile.read_reals('d')
+        mstar_lost  = ffile.read_reals('d')
+        nsink       = ffile.read_ints()
+
+        del ncpu_f, ndim, localseed, nstar_tot, mstar_tot, mstar_lost, nsink # don't need this stuff
+
+        # m = np.empty(nparts, dtype=np.float)
+
+
+        #----------------------
+        # Read particle data
+        #----------------------
+
+        m = ffile.read_reals('d') # x
+        m = ffile.read_reals('d') # y
+        m = ffile.read_reals('d') # z
+        m = ffile.read_reals('d') # vx
+        m = ffile.read_reals('d') # vy
+        m = ffile.read_reals('d') # vz
+        m = ffile.read_reals('d') # mass
+        ffile.close()
+
+        masses = np.unique(m)
+        if masses.shape[0] > 1 :
+            levprint(2, "WARNING: found non-identical masses:", masses)
+            levprint(1, "finished.")
+            return False
+        
+        if mpart is None:
+            mpart = masses
+        else:
+            if mpart[0] != masses[0]:
+                levprint(2, "WARNING: found non-identical masses:", masses[0], mpart[0])
+                levprint(1, "finished.")
+                return False
+
+    return True
+
+
 
 #=======================================
 def check_prog_metadata():
@@ -150,16 +354,8 @@ def check_prog_metadata():
    
 
 
-
-
-
-
-
     levprint(0, "finished progenitor metadata check.")
     return
-
-
-
 
 
 
@@ -241,75 +437,6 @@ def check_unbinding():
     levprint(0, "finished unbinding check.")
 
     return
-
-
-
-#===================================
-def check_particle_masses():
-#===================================
-    """
-    Check whether particles have identical masses
-    """
-    import scipy.io
-
-    levprint(0,"Checking for identical particle masses")
-
-    mpart = None
-
-    for cpu in range(ncpu):
-        srcfile = outputdir+'/part_'+str(outnr).zfill(5)+'.out'+str(cpu+1).zfill(5)
-        if verbose:
-            levprint(1, "Looking through file", srcfile)
-
-        ffile = scipy.io.FortranFile(srcfile, 'r')
-
-        #-----------------------
-        # First read headers
-        #-----------------------
-
-        ncpu_f      = ffile.read_ints()
-        ndim        = ffile.read_ints()
-        nparts      = ffile.read_ints()
-        localseed   = ffile.read_ints()
-        nstar_tot   = ffile.read_ints()
-        mstar_tot   = ffile.read_reals('d')
-        mstar_lost  = ffile.read_reals('d')
-        nsink       = ffile.read_ints()
-
-        del ncpu_f, ndim, localseed, nstar_tot, mstar_tot, mstar_lost, nsink # don't need this stuff
-
-        # m = np.empty(nparts, dtype=np.float)
-
-
-        #----------------------
-        # Read particle data
-        #----------------------
-
-        m = ffile.read_reals('d') # x
-        m = ffile.read_reals('d') # y
-        m = ffile.read_reals('d') # z
-        m = ffile.read_reals('d') # vx
-        m = ffile.read_reals('d') # vy
-        m = ffile.read_reals('d') # vz
-        m = ffile.read_reals('d') # mass
-        ffile.close()
-
-        masses = np.unique(m)
-        if masses.shape[0] > 1 :
-            levprint(2, "WARNING: found non-identical masses:", masses)
-            levprint(1, "finished.")
-            return False
-        
-        if mpart is None:
-            mpart = masses
-        else:
-            if mpart[0] != masses[0]:
-                levprint(2, "WARNING: found non-identical masses:", masses[0], mpart[0])
-                levprint(1, "finished.")
-                return False
-
-    return True
-
 
 
 
@@ -444,6 +571,7 @@ def main():
     identical_masses = check_particle_masses()
     check_unbinding()
     check_prog_metadata()
+    check_mostbounds()
 
 
 
