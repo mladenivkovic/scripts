@@ -71,7 +71,7 @@ def check_mostbounds():
         # Read in mostbound_particles data
         #-----------------------------------------
 
-        mbl = np.loadtxt(debfile('mostbound_particles', myid), skiprows=1, dtype=np.int)
+        mbl = np.atleast_2d(np.loadtxt(debfile('mostbound_particles', myid), skiprows=1, dtype=np.int))
 
         # check for virtuals in mostbound_particles without local mostbound particles
         to_remove = []
