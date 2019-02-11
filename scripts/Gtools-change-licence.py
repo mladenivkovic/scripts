@@ -4,7 +4,7 @@
 #------------------------------------------------
 # Change the licence to a new format
 # Usage:
-#   pNbody-change-licence.py file1 file2 ...
+#   Gtools-change-licence.py file1 file2 ...
 #------------------------------------------------
 
 
@@ -63,7 +63,7 @@ def change_licence(filename):
 
 
         check = check or  ('author'  in docstring)
-        check = check and ('pNbody'  in docstring)
+        check = check and (('Gtools' in docstring) or ('GTools' in docstring))
         check = check and ('file'    in docstring)
         check = check and ('package' in docstring)
 
@@ -133,15 +133,15 @@ def change_licence(filename):
     #----------------------------
     else:
         add = bar
-        add += '#  package:   pNbody\n'
+        add += '#  package:   Gtools\n'
         add += '#  file:      '+arg+'\n'
-        add += '#  brief:     Image example\n'
+        add += '#  brief:     \n'
         add += '#  copyright: GPLv3\n'
         add += '#             Copyright (C) 2019 EPFL (Ecole Polytechnique Federale de Lausanne)\n'
         add += '#             LASTRO - Laboratory of Astrophysics of EPFL\n'
         add += '#  author:    Yves Revaz <yves.revaz@epfl.ch>\n'
         add += '#\n'
-        add += '# This file is part of pNbody.\n'
+        add += '# This file is part of Gtools.\n'
         add += bar
         
         contents.insert(1, add)
