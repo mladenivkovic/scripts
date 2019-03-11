@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 #  This script converts a gadget2 (non-hdf5) type initial condition file
 #  (e.g. made with MUSIC) to a swift type IC file.
 #  Needs pNbody to be installed.
