@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# detailled timing / memory consumption measurements
+
+errormsg='
+    Usage: timing executable args
+'
+
+if [ "$#" -lt 1 ]; then
+    echo "$errormsg"
+    exit
+fi
+
+timeformat="----------------------------------------------------------------\n"
+timeformat="$timeformat""stats for %C\n"
+timeformat="$timeformat""\t Average Mem (kb) \t Max Mem (kb)\t Wall time (s) \t CPU time (s) \t User time (s)\n"
+timeformat="$timeformat""\t %K \t\t\t %M \t\t %e \t\t %S \t\t %U"
+
+
+
+/usr/bin/time -f "$timeformat" "$@" 
