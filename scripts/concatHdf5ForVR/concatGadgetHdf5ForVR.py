@@ -72,26 +72,28 @@ def copy_positions():
     firstfile = h5py.File(allfiles[0], 'r')
     
     istype = True
-    ntypes = 0
-    while istype:
-        ptype = 'PartType'+str(ntypes)
-        if ptype not in firstfile.keys():
-            istype = False
-        else:
+    ntype = 0
+    ptypes = []
+    for ntype in range(100):
+        ptype = 'PartType'+str(ntype)
+        if ptype in firstfile.keys():
             print('Found', ptype)
-            ntypes+=1
+            ptypes.append(ptype)
+
+    ntypes = len(ptypes)
 
     if (ntypes==0):
         print("Found no particle types, did something go wrong?")
         quit()
 
+
     # create a group and a dataset for each particle type
     grps = [None for i in range(ntypes)]
     dsets = [None for i in range(ntypes)]
     for i in range(ntypes):
-        ptype = 'PartType'+str(i)
+        ptype = ptypes[i] 
         grps[i] = hfile.create_group(ptype)
-        dsets[i] = grps[i].create_dataset('Coordinates', (0,3), maxshape=(None,3), chunks=(100, 3))
+        dsets[i] = grps[i].create_dataset('Coordinates', (0,3), maxshape=(None,3), chunks=(1000000, 3))
         
 
     firstfile.close()
@@ -119,7 +121,7 @@ def copy_positions():
 
         # resize dataset, then copy data
         for i in range(ntypes):
-            ptype = 'PartType'+str(i)
+            ptype = ptypes[i] 
             srcgrp = newfile[ptype]
             coords = srcgrp['Coordinates']
 
@@ -148,7 +150,6 @@ def main():
     getfiles()
     write_header()
     copy_positions()
-    print("Finished.")
 
 
     return
