@@ -71,7 +71,7 @@ sed -i 's/,pi,/,np.pi,/g' $FILES
 # in case something went wrong
 sed -i 's/lognp.log/loglog/g' $FILES
 sed -i 's/mpi_np.arange/mpi_arange/g' $FILES
-sed -i 's/np.np.np./np./g' $FILES
-sed -i 's/np.np./np./g' $FILES
-sed -i 's/.np././g' $FILES
+sed -i 's/np\.np\.np\./np./g' $FILES
+sed -i 's/np\.np\./np./g' $FILES
+sed -i 's/\.np\././g' $FILES
 

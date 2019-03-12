@@ -85,11 +85,11 @@ def change_licence(filename):
             contents[ind] = bar
         
         # Replace @keywords
-        kwds = [' @package   ',
-                ' @file      ',
-                ' @brief     ',
-                ' @copyright ',
-                ' @author    '
+        kwds = ['@package   ',
+                '@file      ',
+                '@brief     ',
+                '@copyright ',
+                '@author    '
                 ]
 
         replacements = ['#  package:   ',
