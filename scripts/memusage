@@ -7,6 +7,6 @@ mem() {
 
 export -f  mem
 
-#while true; do
-#    mem $process_name 
-#done
+while true; do
+   mem $process_name
+done
