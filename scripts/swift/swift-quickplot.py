@@ -7,6 +7,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import colors as mcolors
 
 import h5py
 import fast_histogram as fh
@@ -28,7 +29,8 @@ weightarraynames['dens'] = 'Density'
 
 outfile = None
 
-nbins = 200
+nbinsdefault = 200
+nbins = nbinsdefault
 
 
 #==========================
@@ -71,13 +73,20 @@ def getargs():
             action='store_const', 
             const='PartType5', 
             help='use dark matter particle type (PartType5)')
+    parser.add_argument('--nx', 
+            dest='nx', 
+            type=int,
+            action='store', 
+            default=nbinsdefault,
+            help='How many histogram bins to use.')
 
     args = parser.parse_args()
 
-    global infile, weight, weighted, ptype
+    global infile, weight, weighted, ptype, nbins
     infile = args.filename
     weight = args.weight
     ptype = args.ptype
+    nbins = args.nx
 
     if weight is not None:
         weighted = True
@@ -108,19 +117,12 @@ def histogram():
         xmax = f['Header'].attrs['BoxSize']
         ymax = xmax
 
-    dx = xmax/nbins
-    dy = ymax/nbins
-
     if weighted:
         w = f[ptype][weightarraynames[weight]][:] 
     else:
         w = None
 
-     
-    #  if nbins > np.sqrt(x.shape[0]):
-    #      nbins = int(np.sqrt(x.shape[0])+0.5)*2
-    
-    hist = fh.histogram2d(x, y, range=[[-dx, xmax+dx], [-dy, ymax+dy]], bins=[nbins, nbins], weights=w)
+    hist = fh.histogram2d(x, y, range=[[0, xmax], [0, ymax]], bins=[nbins, nbins], weights=w)
 
     return [hist, xmax, ymax]
 
@@ -149,7 +151,20 @@ def make_plot(histdata):
     # hist[0,0] should be plotted at (dx, dy)
     dx = xmax/nbins
     dy = ymax/nbins
-    im=ax.imshow(hist, origin='lower', extent=(-dx, xmax+dx, -dy, ymax+dy), cmap='jet')
+
+    minval = np.abs(hist).min()
+
+    norm = mcolors.Normalize()
+
+    if minval == 0:
+        linthresh = 1e-3
+    else:
+        linthresh =  minval
+
+    im=ax.imshow(hist.T, origin='lower', 
+            extent=(-dx, xmax+dx, -dy, ymax+dy), 
+            cmap='jet', 
+            norm=mcolors.SymLogNorm(linthresh))
 
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="2%", pad=0.05)
@@ -177,6 +192,8 @@ def make_plot(histdata):
         outfile = infile.replace('.h5', '') 
     if weighted:
         outfile+=weight
+    if nbins != nbinsdefault:
+        outfile+='_nx='+str(nbins)
     outfile += '.png'
 
     plt.savefig(outfile, dpi=200)
