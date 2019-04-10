@@ -153,7 +153,7 @@ fpath="$DESTDIR"/"$DESTFILE"
 #===========================
 
 echo "$SRCFILE" '-->' "$DESTFILE"
-ln -n "$SRCFILE" "$fpath"
+ln -s "$SRCFILE" "$fpath"
 
 
 
