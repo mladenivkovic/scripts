@@ -113,6 +113,7 @@ else
 
             else
                 DESTFILE=${FILE#"$PWD"}
+                DESTFILE=${FILE#"$DESTDIR"}
                 gotbothfiles=true
             fi
 
