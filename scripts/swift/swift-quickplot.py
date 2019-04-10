@@ -122,7 +122,7 @@ def histogram():
     else:
         w = None
 
-    hist = fh.histogram2d(x, y, range=[[0, xmax], [0, ymax]], bins=[nbins, nbins], weights=w)
+    hist = fh.histogram2d(x, y, range=[[0, xmax], [0, ymax]], bins=[nbins+1, nbins+1], weights=w)
 
     return [hist, xmax, ymax]
 
@@ -149,8 +149,8 @@ def make_plot(histdata):
 
     # shift the x/y values:
     # hist[0,0] should be plotted at (dx, dy)
-    dx = xmax/nbins
-    dy = ymax/nbins
+    dx = 0.5*xmax/nbins
+    dy = 0.5*ymax/nbins
 
     minval = np.abs(hist).min()
 
