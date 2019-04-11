@@ -1,17 +1,15 @@
 #!/bin/bash
 
 helpmsg="
-This script creates a hard link of specified file in your online backup\n
+This script updates or creates a copy of specified file in your online backup\n
 directory. All the files should be listed in \$linklist file from the\n
 scrbackup.sh script.\n
-If you moved the files in the meantime, I guess you're fucked... But at\n
-least you had a backup I guess. :)
 
 Usage:\n\n
 
-scrbackuprestore.sh [options] sourcefile\n\n
+scrbackupupdate.sh [options] [sourcefile]\n\n
 
-sourcefile:\t   file to read links from\n
+[sourcefile]:\t   file to read links from. If none specified, it will use the hardcoded one.\n
 [options]:\t    -h    \t  show this message\n
 "
 
@@ -20,15 +18,14 @@ sourcefile:\t   file to read links from\n
 # Read cmdlineargs, get SRCFILE and DESTFILE
 #================================================
 
+
 if [ $# == 0 ]; then
-    echo "ERROR: need file"
-    echo -e $helpmsg
-    exit 1
-fi
 
-
-
-if [ $# == 1 ]; then
+    echo "USING HARDCODED ORIGINAL LINKS FILE."
+    echo "IF YOU WANT TO USE A DIFFERENT FILE, SPECIFY IT AS CMD LINE ARG."
+    SRCFILE=$PJ/online-backup/original_links.txt
+    
+elif [ $# == 1 ]; then
 
     case $1 in
 
@@ -61,7 +58,17 @@ while read line; do
     src=`echo $line | sed 's/:/ /g' | awk '{print $1}'`
     dest=`echo $line | sed 's/:/ /g' | awk '{print $2}'`
 
-    scrbackup --no-log "$src" "$dest"
+
+    # do rsync in both directions, such that wherever you modified the file,
+    # it will be updated.
+    # scrbackup --no-log "$src" "$dest"
+
+    # use rsync instead of hard/soft links because git breaks links
+    echo "$src" '-->' "$dest"
+    rsync -a --update "$src" "$dest"
+
+    echo "$dest" '-->' "$src"
+    rsync -a --update "$dest" "$src"
 
     if [ $? -ne 0 ]; then
         echo 'In case you forgot: I need to have scrbackup in the path so I can run it'

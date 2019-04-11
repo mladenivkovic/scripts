@@ -7,7 +7,7 @@ linklist='original_links.txt'
 nolog=false
 
 helpmsg="
-This script creates a hard link of specified file in your online backup\n
+This script creates a copy with rsync of specified file in your online backup\n
 directory, which currently is:\n
 \t    $DESTDIR \n\n
 Furthermore, it keeps track of where the source is by appending it to a list in\n
@@ -153,7 +153,9 @@ fpath="$DESTDIR"/"$DESTFILE"
 #===========================
 
 echo "$SRCFILE" '-->' "$DESTFILE"
-ln -s "$SRCFILE" "$fpath"
+
+# use rsync instead of hard/soft links because git breaks links
+rsync -a --update "$SRCFILE" "$fpath"
 
 
 
