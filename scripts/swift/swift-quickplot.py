@@ -71,8 +71,8 @@ def getargs():
     parser.add_argument('--dm', 
             dest='ptype', 
             action='store_const', 
-            const='PartType5', 
-            help='use dark matter particle type (PartType5)')
+            const='PartType1', 
+            help='use dark matter particle type (PartType1)')
     parser.add_argument('--nx', 
             dest='nx', 
             type=int,
@@ -163,7 +163,8 @@ def make_plot(histdata):
 
     im=ax.imshow(hist.T, origin='lower', 
             extent=(-dx, xmax+dx, -dy, ymax+dy), 
-            cmap='jet', 
+            cmap='YlGnBu_r', 
+            interpolation='bicubic',
             norm=mcolors.SymLogNorm(linthresh))
 
     divider = make_axes_locatable(ax)
@@ -182,7 +183,7 @@ def make_plot(histdata):
 
 
     fig.suptitle(infile)
-    plt.tight_layout()
+    plt.tight_layout(rect=(0, 0, 1, 0.97))
 
 
 
