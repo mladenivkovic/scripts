@@ -133,19 +133,24 @@ fi
 # fpath:    full path
 
 
-
 #================================================
 # Get correct names, create dirs in backup folder
 #================================================
 
-bn=`basename "$DESTFILE"`
-newdirs=${DESTFILE%"$bn"}
-newdirs=${newdirs#"$PWD"}
-newdirs=${newdirs#"$DESTDIR"}
+bn=`basename "$DESTFILE"` # get basename
+newdirs=${DESTFILE%"$bn"} # figure out what new directories you need to create: for starters, take everything before basename
+newdirs=${newdirs#"$PWD"} # subtract PWD
+newdirs=${newdirs#"$DESTDIR"} # subtract DESTDIR
 
 
-mkdir -p "$DESTDIR"/"$newdirs"
-fpath="$DESTDIR"/"$DESTFILE"
+mkdir -p "$DESTDIR"/"$newdirs" # create new dirs if necessary
+fpath="$DESTDIR"/"$DESTFILE" # define full path
+if [ -d "$fpath" ]; then
+    # if $DESTFILE was only a directory name, add the same filename as file currently has
+    # this is needed to write down things properly for eventual updates; otherwise only
+    # the directory will be stored
+    fpath="$fpath"/`basename $SRCFILE`
+fi
 
 
 #===========================
@@ -153,6 +158,7 @@ fpath="$DESTDIR"/"$DESTFILE"
 #===========================
 
 echo "$SRCFILE" '-->' "$DESTFILE"
+
 
 # use rsync instead of hard/soft links because git breaks links
 rsync -a --update "$SRCFILE" "$fpath"
