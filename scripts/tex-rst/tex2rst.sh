@@ -1,15 +1,17 @@
 #!/bin/bash
 
 
+#========================================================
 # Reformat given .tex file (from my glossary project)
 # to a .rst file for the sphinx glossary project
+#========================================================
 
 
 f=$1
 
 # change title, add link, change suffix
 
-$PJ/scripts/tex2rst-title.py $f
+$PJ/scripts/tex-rst/tex2rst-title.py $f
 
 newname=${f%.tex}.rst
 
