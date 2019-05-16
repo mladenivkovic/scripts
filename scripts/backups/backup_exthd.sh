@@ -29,6 +29,7 @@ rsync -a -h --progress --stats  -r -t -D -l \
     --exclude=/mivkov/Downloads/**  \
     --exclude=/mivkov/Dropbox/**  \
     --exclude=/mivkov/google-drive/**  \
+    --exclude=/mivkov/dwhelper/**  \
     --log-file=logs/rsync-backup-private-"$DATE"".log" \
     $DIR_TO_BACKUP $BACKUP_DIR 
 
