@@ -21,7 +21,7 @@ cat $f | \
     sed "s/\`\`/\'/g" | \
     sed "s/''/'/g" | \
     sed "s/\`/'/g" | \
-    sed -E 's/\$(.+)\$/:math:\1:math:/g' | \
+    sed -E 's/\$(.+)\$/:math:`\1`/g' | \
     sed 's/\\begin{equation}/\n.. math::\n/g' | \
     sed 's/\\begin{equation\*}/\n.. math::\n/g' | \
     sed 's/\\begin{align}/\n.. math::\n/g' | \

@@ -8,7 +8,6 @@ f=$1
 
 $PJ/scripts/tex-rst/untex-title.py $f
 
-echo "check"
 
 
 cat $f | \
@@ -16,7 +15,7 @@ cat $f | \
     sed "s/\`\`/\'/g" | \
     sed "s/''/'/g" | \
     # sed "s/\`/'/g" | \
-    sed -E 's/\$(.+)\$/:math:\1:math:/g' | \
+    sed -E 's/\$(.+)\$/:math:`\1`/g' | \
     sed -E "s/:ref:'(.*)'/:ref:\`\1\`/g" | \
 
 
@@ -38,4 +37,3 @@ cat $f | \
     # sed 's/\\CONST/const./g' | \
 
 
-echo check
