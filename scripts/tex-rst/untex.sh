@@ -8,33 +8,34 @@ f=$1
 
 $PJ/scripts/tex-rst/untex-title.py $f
 
-sed -i "s/\`\`/\'/g" $f
-sed -i "s/''/'/g" $f
-# sed -i "s/\`/'/g" $f
+echo "check"
 
 
-while true; do
-    grep '\$' "$f" > /dev/null
-    if [ $? = 0 ]; then
-        sed -i 's/\$/:math:`/' $f
-        sed -i 's/\$/`/' $f
-    else
-        break
-    fi
-done
+cat $f | \
 
-sed -i 's/\\begin{equation}/\n.. math::\n/g' $f
-sed -i 's/\\begin{equation\*}/\n.. math::\n/g' $f
-sed -i 's/\\begin{align}/\n.. math::\n/g' $f
-sed -i 's/\\begin{align\*}/\n.. math::\n/g' $f
-sed -i 's/\\end{equation}/\n/g' $f
-sed -i 's/\\end{equation\*}/\n/g' $f
-sed -i 's/\\end{align}/\n/g' $f
-sed -i 's/\\end{align\*}/\n/g' $f
+    sed "s/\`\`/\'/g" | \
+    sed "s/''/'/g" | \
+    # sed "s/\`/'/g" | \
+    sed -E 's/\$(.+)\$/:math:\1:math:/g' | \
+    sed -E "s/:ref:'(.*)'/:ref:\`\1\`/g" | \
 
-sed -i 's/\\begin{itemize}/\n/g' $f
-sed -i 's/\\end{itemize}/\n/g' $f
-sed -i 's/^\s*\\item/-/g' $f
 
-# sed -i 's/\\msol/M_{\\odot}/g' $f
-# sed -i 's/\\CONST/const./g' $f
+    sed 's/\\begin{equation}/\n.. math::\n/g' | \
+    sed 's/\\begin{equation\*}/\n.. math::\n/g' | \
+    sed 's/\\begin{align}/\n.. math::\n/g' | \
+    sed 's/\\begin{align\*}/\n.. math::\n/g' | \
+    sed 's/\\end{equation}/\n/g' | \
+    sed 's/\\end{equation\*}/\n/g' | \
+    sed 's/\\end{align}/\n/g' | \
+    sed 's/\\end{align\*}/\n/g' | \
+
+    sed 's/\\begin{itemize}/\n/g' | \
+    sed 's/\\end{itemize}/\n/g' | \
+    sed 's/^\s*\\item/-/g' \
+    > $f
+
+    # sed 's/\\msol/M_{\\odot}/g' | \
+    # sed 's/\\CONST/const./g' | \
+
+
+echo check
