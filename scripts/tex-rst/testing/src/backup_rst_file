@@ -1,0 +1,38 @@
+
+
+RST file
+=======================
+
+This is some text here.
+
+New paragraph!
+Itemized list first:
+\begin{itemize} 
+	\item Is constant throughout a cycle;
+	\item Is opposite across the equator throughout a cycle;
+	\item Reverses itself from one cycle to the next.
+\end{itemize}
+
+
+Some more text.
+
+
+
+In-line math: The apparent magnitude $m$ in the spectral band $x$ would be given by
+math environment:
+\begin{equation*}
+	m_x = - 2.5 \log_{10} \left(\frac{F_x}{F_{x,0}}\right)
+\end{equation*}
+\begin{align*}
+	m_x &= - 2.5 \log_{10} \left(\frac{F_x}{F_{x,0}}\right)
+\end{align*}
+\begin{equation}
+	m_x = - 2.5 \log_{10} \left(\frac{F_x}{F_{x,0}}\right)
+\end{equation}
+\begin{align}
+	m_x &= - 2.5 \log_{10} \left(\frac{F_x}{F_{x,0}}\right)
+\end{align}
+
+
+
+Trying $a$ lot of $m$ath inline $like this = \arccos(\alpha)$ and $e^{ijk} = 0$

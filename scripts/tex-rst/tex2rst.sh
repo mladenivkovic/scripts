@@ -9,19 +9,24 @@
 
 f=$1
 
-# change title, add link, change suffix
+# change title, add link anchor, change suffix
+# this copies the .tex file to same_name.rst
+$PJ/scripts/tex-rst/tex2rst-title.py $f
 
-$PJ/scripts/tex-rst/tex2rst-title.pyf
 
 newname=${f%.tex}.rst
-newname=${newname%.rst.rst}.rst
+
+if [ "$newname" = *".rst.rst" ]; then
+    newname=${newname%.rst.rst}.rst
+fi
 
 
-cat $f | \
+cat $newname | \
     sed "s/\`\`/\'/g" | \
     sed "s/''/'/g" | \
     sed "s/\`/'/g" | \
-    sed -E 's/\$(.+)\$/:math:`\1`/g' | \
+    sed 's/\\\\/\n/g' | \
+    sed 's/\$\([^$]*\)\$/:math:`\1`/g' | \
     sed 's/\\begin{equation}/\n.. math::\n/g' | \
     sed 's/\\begin{equation\*}/\n.. math::\n/g' | \
     sed 's/\\begin{align}/\n.. math::\n/g' | \
@@ -39,6 +44,6 @@ cat $f | \
     # sed 's/\\CONST/const./g' | \
 
     # replace errorneous :ref:'<blabla>' with :ref:`<blabla>`
-    sed -E "s/:ref:'(.*)'/:ref:\`\1\`/g" \
+    sed -E "s/:ref:'(.*)'/:ref:\`\1\`/g" > foo
 
-    > $newname
+mv foo $newname
