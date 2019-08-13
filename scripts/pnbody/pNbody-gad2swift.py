@@ -35,7 +35,9 @@ from os import path
 
 # number of particle type
 N_type = 6
-debug = True
+debug = False   # helpful debugging flag. Prints more info at times, and skips repetitive questions.
+
+
 
 #====================================
 def get_filenames():
@@ -220,70 +222,108 @@ def convert_gadget_to_swift(file_in, file_out):
 
     units = ["UnitLength_in_cm", "UnitVelocity_in_cm_per_s", "UnitMass_in_g"]
     unitd = nb.unitsparameters.get_dic()
-    print("WARNING:")
-    print("This script assumes gadget default units, which are:")
-    for u in units:
-        print("{0:30}{1:12.4E}".format(u, unitd[u]))
 
-    while True:
-        ans = input("Do you wish to change them manually? [y/n] ")
-        if ans=='y' or ans == 'Y':
-            i = 0
-            while i<len(units):
-                u = units[i]
-                inp = input("Enter a value for "+u+": [leave empty to keep] ")
-                try:
-                    val = float(inp)
-                except ValueError:
-                    if (inp==""):
-                        i+=1
-                        continue
-                    else:
-                        print("Didn't understand input. Try again.")
-                        continue
-                nb.unitsparameters.set(u, val)
-                i+=1
-            print("Units are now:")
-            for u in units:
-                unitd = nb.unitsparameters.get_dic()
-                print("{0:30}{1:12.4E}".format(u, unitd[u]))
-                
-            break
-        elif ans == 'n' or ans == 'N':
-            break
-    
+    if not debug:
+        print("\nWARNING:")
+        print("This script assumes gadget default units, which are:")
+        for u in units:
+            print("{0:30}{1:12.4E}".format(u, unitd[u]))
+
+        while True:
+            ans = input("Do you wish to change them manually? [y/n] ")
+            if ans=='y' or ans == 'Y':
+                i = 0
+                while i<len(units):
+                    u = units[i]
+                    inp = input("Enter a value for "+u+": [leave empty to keep] ")
+                    try:
+                        val = float(inp)
+                    except ValueError:
+                        if (inp==""):
+                            i+=1
+                            continue
+                        else:
+                            print("Didn't understand input. Try again.")
+                            continue
+                    nb.unitsparameters.set(u, val)
+                    i+=1
+                print("Units are now:")
+                for u in units:
+                    unitd = nb.unitsparameters.get_dic()
+                    print("{0:30}{1:12.4E}".format(u, unitd[u]))
+                    
+                break
+            elif ans == 'n' or ans == 'N':
+                break
+        
 
     # set default parameters
     boxsizeguess =  1.2 * (nb.pos.max() - nb.pos.min())
 
-    print("WARNING:")
+
+    print("\nWARNING:")
     print("This script made a guess for the boxsize, which is ", boxsizeguess)
     print("If that is not correct, the computed density parameters Omega ")
     print("will be different from the ones in your MUSIC config file, and SWIFT")
     print("might not run if you specified the wrong density parameters in your SWIFT parameter file.")
 
-    while True:
-        ans = input("Do you wish to change them manually? [y/n] ")
-        if ans=='y' or ans == 'Y':
-            inp = input("Enter a value for the boxsize: ")
-            try:
-                val = float(inp)
-            except ValueError:
-                print("Didn't understand input. Try again.")
-                continue
-            nb.boxsize = val
-            break
 
-        elif ans == 'n' or ans == 'N':
-            nb.boxsize = boxsizeguess 
-            break
+    if not debug:
+        while True:
+            ans = input("Do you wish to change them manually? [y/n] ")
+            if ans=='y' or ans == 'Y':
+                inp = input("Enter a value for the boxsize: ")
+                try:
+                    val = float(inp)
+                except ValueError:
+                    print("Didn't understand input. Try again.")
+                    continue
+                nb.boxsize = val
+                break
+
+            elif ans == 'n' or ans == 'N':
+                nb.boxsize = boxsizeguess 
+                break
 
 
     nb.periodic = 0
     nb.flag_entropy_ics = 0
 
     # compute smoothing length
-    hsml = nb.get_rsp_approximation()
+    print("\nWARNING:")
+    print("SWIFT needs an initial guess for the particle smoothing lengths.")
+    print("They don't need to be exact, SWIFT will fix them up, but they shouldn't")
+    print("be zero. You can either do a proper estimate of the smoothing length")
+    print("using the tree construction from pNbody, but that might fail for 'large' (>1GB)")
+    print("IC file sizes. Or you can do a crude estimate over mean interparticle distances.")
+ 
+    while True:
+        ans = input("Should I try the tree code? (Might crash) [y/n]")
+        if ans=='y' or ans == 'Y':
+            do_tree = True
+            break
+
+        elif ans == 'n' or ans == 'N':
+            do_tree = False
+            break
+
+    if do_tree:
+        hsml = nb.get_rsp_approximation()
+    else:
+        partx = (nb.nbody_tot)**(1./3) # average number of particles in 1 direction
+        hest = 2*nb.boxsize/partx # factor 2: just guessing here. Shouldn't matter
+        hsml = np.zeros(nb.nbody_tot)
+        # now assign the particles that need a smoothing length the guess
+        start = 0
+        for i,npart in enumerate(nb.npart):
+            if i == 2 or i ==3:
+                continue
+            stop = start + npart
+            hsml[start:stop] = hest
+            start = stop
+    
+
+
     nb.rsp = hsml
 
     # write new file
