@@ -1,4 +1,16 @@
 #!/usr/bin/env python3
+
+###########################################################################################
+#  package:   Gtools
+#  file:      pNbody-gad2swift.py
+#  brief:     convert binary gadget IC files to swift format
+#  copyright: GPLv3
+#             Copyright (C) 2019 EPFL (Ecole Polytechnique Federale de Lausanne)
+#             LASTRO - Laboratory of Astrophysics of EPFL
+#  author:    Loic Hausammann, Mladen Ivkovic
+#
+# This file is part of Gtools.
+#
 #  This script converts a gadget2 (non-hdf5) type initial condition file
 #  (e.g. made with MUSIC) to a swift type IC file.
 #  Needs pNbody to be installed.
@@ -11,6 +23,7 @@
 #
 #  Based on scripts written by Loic Hausammann.
 #  Put together in this form by Mladen Ivkovic, Dec 2018
+###########################################################################################
 
 
 usage="""
@@ -20,9 +33,10 @@ Needs pNbody to be installed.
 
 Usage:
     pNbody-gad2swift.py gadget-IC.dat [outputfilename_swift.dat]
-
+ 
     outputfilename_swift.dat is optional. If you don't
     specify it, the script will create a file called
+    the script will create a file called
     <gadget-ic-filename-you-gave-as-first-argument>-SWIFT.dat
 """
 

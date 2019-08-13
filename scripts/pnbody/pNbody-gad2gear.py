@@ -1,5 +1,17 @@
 #!/usr/bin/env python3
 
+###########################################################################################
+#  package:   Gtools
+#  file:      pNbody-gad2gear.py
+#  brief:     convert gadget binary IC file to gear type IC file
+#  copyright: GPLv3
+#             Copyright (C) 2019 EPFL (Ecole Polytechnique Federale de Lausanne)
+#             LASTRO - Laboratory of Astrophysics of EPFL
+#  author:    Loic Hausammann, Mladen Ivkovic
+#
+# This file is part of Gtools.
+###########################################################################################
+
 
 from pNbody import *
 
