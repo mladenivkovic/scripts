@@ -23,6 +23,8 @@ Usage:
 
 tosort = None
 sort_by = None
+for_debug = False
+debugtools = None
 
 
 
@@ -57,14 +59,20 @@ def getargs():
             action='store_const',
             const='ids',
             help='Flag to sort particles by ID')
+    parser.add_argument('--grads',
+            dest='debugtool', 
+            action='store_const',
+            const='grads',
+            help='Print the "GradientSum" field only with IDs')
  
     args = parser.parse_args()
 
-    global tosort, sort_by
+    global tosort, sort_by, for_debug, debugtools
 
     fname = args.filename
     tosort = args.tosort
     ptype = args.ptype
+
 
     try:
         fname = sys.argv[1]  
@@ -77,13 +85,18 @@ def getargs():
         quit(2)
 
 
-
     if tosort: # -s flag; set sort_by to ids
         sort_by = 'ids'  
 
     if args.sort_by is not None:
         tosort = True
         sort_by = args.sort_by
+
+
+    if args.debugtool is not None:
+        for_debug = True
+        debugtools = args.debugtool
+
 
     return fname, ptype
 
@@ -129,18 +142,27 @@ def read_file(srcfile, ptype):
         h = f[ptype]['SmoothingLengths'][:]
 
 
+
+    if for_debug:
+        if debugtools == 'grads':
+            debug_array = f[ptype]['GradientSum'][:]
+    else:
+        debug_array = None
+
+
+
     f.close()
 
-    return x, y, z, h, rho, m, ids
+    return x, y, z, h, rho, m, ids, debug_array
 
 
 
 
 
 
-#================================================
-def print_particles(x, y, z, h, rho, m, ids):
-#================================================
+#===========================================================
+def print_particles(x, y, z, h, rho, m, ids, debug_array):
+#===========================================================
 
     if tosort:
         if sort_by == 'ids':
@@ -148,41 +170,66 @@ def print_particles(x, y, z, h, rho, m, ids):
     else:
         inds = range(x.shape[0])
 
-    
-    if rho is not None:
-        print(
-            "{0:6} | {1:10} {2:10} {3:10} | {4:10} {5:10} {6:10} |".format(
-                    "ID", "x", "y", "z", 'h', 'm', 'rho'
-                )
-            )
-        print("------------------------------------------------------------------------------")
 
+    if for_debug:
+
+        if debug_array is None:
+            print("debug_array is None. Something went wrong.")
+            quit(1)
+
+        print("{0:6} | {1:12}".format("ID", "Debug array"))
+        print("-------------------------------------------------------------------------")
         for i in inds:
-            print(
-                "{0:6d} | {1:10.4f} {2:10.4f} {3:10.4f} | {4:10.4f} {5:10.4f} {6:10.4f} |".format(
-                        ids[i], x[i], y[i], z[i], h[i], m[i], rho[i]
-                    )
-                )
+            print("{0:6d} | ".format(ids[i]), end='')
+            if debug_array.ndim == 1:
+                print("{0:14} ".format(debug_array[i]))
+            else:
+                #  print(debug_array.dtype.name, type(debug_array.dtype))
+                if 'float' in debug_array.dtype.name:
+                    for j in range(debug_array.ndim):
+                        print("{0:14.8f} ".format(debug_array[i,j]), end='')
+                else:
+                    for j in range(debug_array.ndim):
+                        print("{0:14d} ".format(debug_array[i,j]), end='')
+
+                print("")
 
     else:
-        print(
-            "{0:6} | {1:10} {2:10} {3:10} | {4:10} {5:10} |".format(
-                    "ID", "x", "y", "z", 'h', 'm'
-                )
-            )
-        print("-------------------------------------------------------------------")
-
-        for i in inds:
+        
+        if rho is not None:
             print(
-                "{0:6d} | {1:10.4f} {2:10.4f} {3:10.4f} | {4:10.4f} {5:10.4f} |".format(
-                        np.asscalar(ids[i]), 
-                        np.asscalar(x[i]), 
-                        np.asscalar(y[i]), 
-                        np.asscalar(z[i]), 
-                        np.asscalar(h[i]), 
-                        np.asscalar(m[i])
+                "{0:6} | {1:10} {2:10} {3:10} | {4:10} {5:10} {6:10} |".format(
+                        "ID", "x", "y", "z", 'h', 'm', 'rho'
                     )
                 )
+            print("------------------------------------------------------------------------------")
+
+            for i in inds:
+                print(
+                    "{0:6d} | {1:10.4f} {2:10.4f} {3:10.4f} | {4:10.4f} {5:10.4f} {6:10.4f} |".format(
+                            ids[i], x[i], y[i], z[i], h[i], m[i], rho[i]
+                        )
+                    )
+
+        else:
+            print(
+                "{0:6} | {1:10} {2:10} {3:10} | {4:10} {5:10} |".format(
+                        "ID", "x", "y", "z", 'h', 'm'
+                    )
+                )
+            print("-------------------------------------------------------------------")
+
+            for i in inds:
+                print(
+                    "{0:6d} | {1:10.4f} {2:10.4f} {3:10.4f} | {4:10.4f} {5:10.4f} |".format(
+                            np.asscalar(ids[i]), 
+                            np.asscalar(x[i]), 
+                            np.asscalar(y[i]), 
+                            np.asscalar(z[i]), 
+                            np.asscalar(h[i]), 
+                            np.asscalar(m[i])
+                        )
+                    )
 
 
 
@@ -198,9 +245,9 @@ def main():
 #==========================
 
     fname, ptype = getargs()
-    x, y, z, h, rho, m, ids = read_file(fname, ptype)
+    x, y, z, h, rho, m, ids, debug_array = read_file(fname, ptype)
 
-    print_particles(x,y,z,h,rho,m,ids)
+    print_particles(x, y, z, h, rho, m, ids, debug_array)
 
 
 
