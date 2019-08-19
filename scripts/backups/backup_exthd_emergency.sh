@@ -6,7 +6,7 @@ export DATE=`date +%F_%Hh%M`
 export BACKUP_DIR=/media/mivkov/Mladen/emergency_backup #Directory where the backup shall be saved
 export DIR_TO_BACKUP=/home/mivkov #Parent directory to be backed up
 
-dirs_to_backup="$HOME/local $HOME/coding $HOME/Documents $HOME/Desktop $HOME/EPFL $HOME/Pictures/Memories $HOME/scripts"
+dirs_to_backup="$HOME/local $HOME/coding $HOME/Documents $HOME/Desktop $HOME/EPFL $HOME/Pictures/Memories $HOME/scripts $HOME/Encfs/.Private-backup"
 
 echo "---Backup started---"
 
