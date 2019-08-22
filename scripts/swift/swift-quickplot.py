@@ -32,6 +32,33 @@ outfile = None
 nbinsdefault = 200
 nbins = nbinsdefault
 
+x_to_y_ratio = 1
+
+
+
+# Plot parameters
+params = {'axes.labelsize': 10,
+'axes.titlesize': 10,
+'font.size': 12,
+'legend.fontsize': 12,
+'xtick.labelsize': 10,
+'ytick.labelsize': 10,
+#  'text.usetex': True,
+'figure.subplot.left'    : 0.045,
+'figure.subplot.right'   : 0.99,
+'figure.subplot.bottom'  : 0.05,
+'figure.subplot.top'     : 0.99,
+'figure.subplot.wspace'  : 0.15,
+'figure.subplot.hspace'  : 0.12,
+'lines.markersize' : 6,
+'lines.linewidth' : 3.,
+#  'text.latex.unicode': False
+}
+plt.rcParams.update(params)
+plt.rc('font',**{'family':'sans-serif','sans-serif':['Times']})
+
+
+
 
 #==========================
 def getargs():
@@ -103,7 +130,7 @@ def histogram():
     Read in data, histogram them
     """
 
-    global nbins
+    global nbins, x_to_y_ratio
 
     f = h5py.File(infile)
 
@@ -117,12 +144,14 @@ def histogram():
         xmax = f['Header'].attrs['BoxSize']
         ymax = xmax
 
+    x_to_y_ratio = xmax/ymax
+
     if weighted:
         w = f[ptype][weightarraynames[weight]][:] 
     else:
         w = None
 
-    hist = fh.histogram2d(x, y, range=[[0, xmax], [0, ymax]], bins=[nbins+1, nbins+1], weights=w)
+    hist = fh.histogram2d(x, y, range=[[0, xmax], [0, ymax]], bins=[nbins+1, int(nbins/x_to_y_ratio+0.5)+1], weights=w)
 
     return [hist, xmax, ymax]
 
@@ -144,7 +173,7 @@ def make_plot(histdata):
     xmax = histdata[1]
     ymax = histdata[2]
 
-    fig = plt.figure(figsize=(10, 10))
+    fig = plt.figure(figsize=(15, 15/x_to_y_ratio+0.5))
     ax = fig.add_subplot(111, aspect='equal')
 
     # shift the x/y values:
@@ -164,6 +193,7 @@ def make_plot(histdata):
     im=ax.imshow(hist.T, origin='lower', 
             extent=(-dx, xmax+dx, -dy, ymax+dy), 
             cmap='YlGnBu_r', 
+            #  interpolation='None',
             interpolation='bicubic',
             norm=mcolors.SymLogNorm(linthresh))
 
