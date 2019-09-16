@@ -50,5 +50,14 @@ rsync -h --progress --stats -r -t -l -D \
     /etc $BACKUP_DIR_ROOT
 
 
+echo "====================================="
+echo "--- Backing up repos and software ---"
+echo "====================================="
+sudo aptik --scripted \
+    --backup-all \
+    --skip-users --skip-groups --skip-mounts --skip-home \
+    --basepath $BACKUP_DIR/aptik-backup
+
+
 echo "---Backup ended---"
 exit 0
