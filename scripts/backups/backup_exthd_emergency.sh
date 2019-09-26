@@ -1,5 +1,6 @@
 #!/bin/bash
-#Script to back up files to external HD.
+# Script to back up files to external HD.
+# EMERGENCY: meant for small backup at home.
 
 
 export DATE=`date +%F_%Hh%M`
@@ -41,4 +42,4 @@ sudo aptik --scripted \
 
 
 echo "---Backup ended---"
-exit 0
+exit
