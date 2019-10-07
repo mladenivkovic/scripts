@@ -4,7 +4,8 @@
 
 
 export DATE=`date +%F_%Hh%M`
-export BACKUP_DIR=/media/mivkov/BACKUP_LENOVO/mivkov #Directory where the backup shall be saved
+export BACKUP_MEDIA=/media/mivkov/BACKUP_LENOVO
+export BACKUP_DIR=$BACKUP_MEDIA/mivkov #Directory where the backup shall be saved
 export DIR_TO_BACKUP=/home/mivkov #Parent directory to be backed up
 
 dirs_to_backup="$HOME/local $HOME/coding $HOME/Documents $HOME/Desktop $HOME/EPFL $HOME/Pictures/Memories $HOME/scripts $HOME/Encfs/.Private-backup $HOME/'Calibre Library' $HOME/UZH $HOME/Zotero"
@@ -36,7 +37,7 @@ echo "====================================="
 sudo aptik --scripted \
     --backup-all \
     --skip-users --skip-groups --skip-mounts --skip-home \
-    --basepath $BACKUP_DIR/aptik-backup
+    --basepath $BACKUP_MEDIA/aptik-backup
 
 
 
