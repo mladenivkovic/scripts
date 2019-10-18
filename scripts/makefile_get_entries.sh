@@ -76,7 +76,7 @@ elif [ "$which" == c ]; then
     # C
     #---------------------
     for file in *.c; do
-        echo ${file%.f90}.o: $file
+        echo ${file%.c}.o: $file
         echo -e "\t"'$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)' # the tab here is vital.
         echo
     done
