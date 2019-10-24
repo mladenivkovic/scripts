@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# version=8
-version=7
+version=8
+# version=7
 
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-"$version" 60
 sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-"$version" 60

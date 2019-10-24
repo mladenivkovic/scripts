@@ -7,17 +7,32 @@
 # module purge
 # spack uninstall --all
 
-spack install -y lmod %gcc@7.4.0
+spack install -y lmod %gcc@8.3.0
+# spack install -y gcc@8.3.0 %gcc@7.4.0
 
-for compiler in gcc@7.4.0 gcc@8.3.0 clang@6.0.0-1ubuntu2 ; do
+# for compiler in clang@6.0.0 clang@8.0.0-3; do
+# for compiler in gcc@7.4.0 gcc@8.2.0 clang@6.0.0-1ubuntu2 clang@8.0.0-3~ubuntu18.04.1; do
+# for compiler in gcc@7.4.0 gcc@8.2.0 ; do
+for compiler in gcc@8.3.0 ; do
 
+# if [[ $compiler == "clang"* ]]; then
+#     echo got clang
+#     CFLAGS=-fPIC
+#     CXXFLAGS=-fPIC
+#     FFLAGS=-fPIC
+# else
+#     CFLAGS=
+#     CXXFLAGS=
+#     FFLAGS=
+# fi
 
 #--------------------
 # core dependencies
 #--------------------
 
-spack install -y openmpi %$compiler
-spack install -y mpich %$compiler
+# spack install -y openmpi cflags="$CFLAGS" cxxflags="$CXXFLAGS" fflags="$FFLAGS" %"$compiler"
+spack install -y mpich   cflags="$CFLAGS" cxxflags="$CXXFLAGS" fflags="$FFLAGS" %"$compiler"
+exit
 
 
 #-----------------------
