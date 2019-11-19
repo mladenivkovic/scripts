@@ -166,7 +166,7 @@ def print_particles(x, y, z, h, rho, m, ids, debug_array):
 
     if tosort:
         if sort_by == 'ids':
-            inds = np.argsort(ids)
+            inds = np.argsort(ids, axis=0)
     else:
         inds = range(x.shape[0])
 
