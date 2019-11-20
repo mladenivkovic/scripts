@@ -9,6 +9,16 @@ export DIR_TO_BACKUP=/home/mivkov #Parent directory to be backed up
 
 echo "---Backup started---"
 
+
+echo "====================================="
+echo "--- Backing up repos and software ---"
+echo "====================================="
+sudo aptik --scripted \
+    --backup-all \
+    --skip-users --skip-groups --skip-mounts --skip-home \
+    --basepath $BACKUP_DIR/aptik-backup
+
+
 echo "====================================="
 echo "Started backup private files"
 echo "====================================="
@@ -48,16 +58,6 @@ rsync -h --progress --stats -r -t -l -D \
     --exclude=**/*trash*/ \
     --log-file=logs/rsync-backup-etc-"$DATE".log \
     /etc $BACKUP_DIR_ROOT
-
-
-echo "====================================="
-echo "--- Backing up repos and software ---"
-echo "====================================="
-sudo aptik --scripted \
-    --backup-all \
-    --skip-users --skip-groups --skip-mounts --skip-home \
-    --basepath $BACKUP_DIR/aptik-backup
-
 
 echo "---Backup ended---"
 exit 0
