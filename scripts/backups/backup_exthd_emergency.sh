@@ -12,6 +12,16 @@ dirs_to_backup="$HOME/local $HOME/coding $HOME/Documents $HOME/Desktop $HOME/EPF
 
 echo "---Backup started---"
 
+echo "====================================="
+echo "--- Backing up repos and software ---"
+echo "====================================="
+sudo aptik --scripted \
+    --backup-all \
+    --skip-users --skip-groups --skip-mounts --skip-home \
+    --basepath $BACKUP_MEDIA/aptik-backup
+
+
+
 #Private files
 
 for dir in $dirs_to_backup; do
@@ -29,16 +39,6 @@ for dir in $dirs_to_backup; do
         --log-file=logs/rsync-backup-private-"$DATE"".log" \
         $dir $BACKUP_DIR 
 done
-
-
-echo "====================================="
-echo "--- Backing up repos and software ---"
-echo "====================================="
-sudo aptik --scripted \
-    --backup-all \
-    --skip-users --skip-groups --skip-mounts --skip-home \
-    --basepath $BACKUP_MEDIA/aptik-backup
-
 
 
 
