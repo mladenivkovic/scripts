@@ -30,9 +30,9 @@ for compiler in gcc@8.3.0 ; do
 # core dependencies
 #--------------------
 
-# spack install -y openmpi cflags="$CFLAGS" cxxflags="$CXXFLAGS" fflags="$FFLAGS" %"$compiler"
-spack install -y mpich   cflags="$CFLAGS" cxxflags="$CXXFLAGS" fflags="$FFLAGS" %"$compiler"
-exit
+spack install -y openmpi cflags="$CFLAGS" cxxflags="$CXXFLAGS" fflags="$FFLAGS" %"$compiler"
+# spack install -y mpich   cflags="$CFLAGS" cxxflags="$CXXFLAGS" fflags="$FFLAGS" %"$compiler"
+# exit
 
 
 #-----------------------
@@ -41,8 +41,10 @@ exit
 
 
 # with dependencies
+#~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-for dep in openmpi mpich; do
+# for dep in openmpi mpich; do
+for dep in openmpi; do
 
     for pack in parmetis; do
         spack install -y $pack ^$dep %$compiler
@@ -53,15 +55,19 @@ for dep in openmpi mpich; do
     # specifications are taken to be for the dependency
     spack install -y fftw@3.3.8 +openmp %$compiler ^$dep
     spack install -y fftw@2.1.5 +openmp %$compiler ^$dep
+    spack install -y hdf5 +cxx +fortran +threadsafe %$compiler ^$dep
 done;
 
 
 # without
+#~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 for pack in jemalloc gsl metis; do
     spack install -y $pack %$compiler
 done;
 
 spack install -y hdf5 +cxx +fortran +threadsafe %$compiler
+spack install -y fftw@3.3.8 +openmp %$compiler
+spack install -y fftw@2.1.5 +openmp %$compiler
 
 done;
