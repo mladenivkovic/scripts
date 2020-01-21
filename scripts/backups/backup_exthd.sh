@@ -40,8 +40,11 @@ rsync -a -h --progress --stats  -r -t -D -l \
     --exclude=/mivkov/Dropbox/**  \
     --exclude=/mivkov/google-drive/**  \
     --exclude=/mivkov/dwhelper/**  \
+    --exclude=/mivkov/Music/**  \
+    --exclude=/mivkov/Videos/**  \
     --log-file=logs/rsync-backup-private-"$DATE"".log" \
     $DIR_TO_BACKUP $BACKUP_DIR 
+    # --exclude=/mivkov/simulation_archive/**  \
 
 
 echo "====================================="
