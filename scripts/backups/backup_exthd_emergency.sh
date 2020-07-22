@@ -4,11 +4,11 @@
 
 
 export DATE=`date +%F_%Hh%M`
-export BACKUP_MEDIA=/media/mivkov/BACKUP_LENOVO
+export BACKUP_MEDIA=/media/mivkov/BACKUP_EMERGENCY
 export BACKUP_DIR=$BACKUP_MEDIA/mivkov #Directory where the backup shall be saved
 export DIR_TO_BACKUP=/home/mivkov #Parent directory to be backed up
 
-dirs_to_backup="$HOME/local $HOME/coding $HOME/Documents $HOME/Desktop $HOME/EPFL $HOME/Pictures/Memories $HOME/'Calibre Library' $HOME/UZH $HOME/Zotero"
+dirs_to_backup=("$HOME/local" "$HOME/coding" "$HOME/Documents" "$HOME/Desktop" "$HOME/EPFL" "$HOME/Pictures/Memories" "$HOME/Calibre Library" "$HOME/UZH" "$HOME/Zotero")
 
 echo "---Backup started---"
 
@@ -24,9 +24,9 @@ sudo aptik --scripted \
 
 #Private files
 
-for dir in $dirs_to_backup; do
+for dir in "${dirs_to_backup[@]}"; do
     echo "====================================="
-    echo working for $dir
+    echo working for "$dir"
     echo "====================================="
     rsync -a -h --progress --stats  -r -t -D -l \
         --update --delete-before --delete-excluded \
@@ -37,7 +37,7 @@ for dir in $dirs_to_backup; do
         --exclude=**/*Trash*/ \
         --exclude=**/*trash*/ \
         --log-file=logs/rsync-backup-private-"$DATE"".log" \
-        $dir $BACKUP_DIR 
+        "$dir" $BACKUP_DIR 
 done
 
 

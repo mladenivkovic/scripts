@@ -46,7 +46,7 @@ DIMFLAGS=''             # default 3D
 # GIZMOFLAGS="            --with-hydro=gizmo-mfv
 #                         --with-riemann-solver=hllc"
 # with Ivanova
-GIZMOFLAGS="            --with-hydro=gizmo-mfv 
+GIZMOFLAGS="            --with-hydro=gizmo-mfv
                         --with-riemann-solver=exact
                         --enable-ivanova-surfaces"
 LIBFLAGS="              --with-parmetis 
