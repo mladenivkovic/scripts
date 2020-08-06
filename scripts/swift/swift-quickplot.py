@@ -146,8 +146,20 @@ def main():
     data = load(infile)
     meta = data.metadata
     boxsize = meta.boxsize
-    redshift = meta.redshift
-    time = meta.t.in_units("Gyr")
+
+    # check for redshift and time. Might be missing
+    # in some initial conditions.
+    no_redshift = False
+    no_time = False
+    try:
+        redshift = meta.redshift
+    except AttributeError:
+        no_redshift = True
+    try:
+        time = meta.t.in_units("Gyr")
+    except AttributeError:
+        no_time = True
+ 
 
     mymap = project_gas(data, 
                 resolution=nx,
@@ -158,7 +170,7 @@ def main():
     fig = plt.figure(figsize=(7, 6))
     ax = fig.add_subplot(111, aspect='equal')
 
-    im=ax.imshow(mymap.value, 
+    im=ax.imshow(mymap.value.T, 
             origin='lower', 
             cmap='YlGnBu_r', 
             extent = (0, boxsize.value[0], 0, boxsize.value[1]), 
@@ -169,7 +181,14 @@ def main():
     cb.ax.set_ylabel(to_plot + " [$" + mymap.units.latex_repr + "$]")
 
     title = r"\verb|{}|".format(infile)
-    title += "; z = {0:.3f}, t= {1:.3e}".format(redshift, time)
+    if no_redshift and no_time:
+        pass
+    elif no_redshift:
+        title += "; t= {1:.3e}".format(time)
+    elif no_time:
+        title += "; z = {0:.3f}".format(redshift)
+    else:
+        title += "; z = {0:.3f}, t= {1:.3e}".format(redshift, time)
 
 
     ax.set_title(title)
