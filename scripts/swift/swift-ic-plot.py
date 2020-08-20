@@ -123,7 +123,6 @@ def plot_1D(data):
     u = data.gas.internal_energy
     v = data.gas.velocities
 
-
     fig = plt.figure(figsize=(12, 4))
 
     ax1 = fig.add_subplot(131)
@@ -133,7 +132,7 @@ def plot_1D(data):
     ax1.scatter(x[:,0], rho)
     ax1.set_ylabel("density")
     ax1.set_xlabel("x")
-    ax2.scatter(x[:,0], v[:,0])
+    ax2.scatter(x[:,0], v)
     ax2.set_ylabel("velocity")
     ax2.set_xlabel("x")
     ax3.scatter(x[:,0], u)
