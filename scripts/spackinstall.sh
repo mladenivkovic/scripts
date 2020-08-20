@@ -7,14 +7,42 @@
 # module purge
 # spack uninstall --all
 
-# spack install -y lmod %gcc@7.5.0
 
+# my native compiler
+native="gcc@7.5.0"
+
+spack install -y lmod %"$native"
+
+# make modules work
+source ~/.bashrc_modules
+
+# install compilers
+for compiler in gcc@8.4.0 gcc@9.2.0 gcc@10.2.0; do
+    spack install -y "$compiler" %"$native"
+
+    # make sure spack knows about its compilers
+    module purge
+    compiler_module=`echo "$compiler" | sed 's:@:/:'`
+    module load "$compiler_module"
+    spack compiler add
+    module purge
+done
+
+
+
+# get all packages for all compilers
 # for compiler in clang@6.0.0; do
-# for compiler in gcc@7.5.0 ; do
+# for compiler in "$native" ; do
 # for compiler in gcc@8.4.0 ; do
 # for compiler in gcc@9.2.0 ; do
-for compiler in gcc@10.2.0 ; do
+# for compiler in gcc@10.2.0 ; do
+for compiler in "$native" gcc@8.4.0 gcc@9.2.0 gcc@10.2.0 ; do
 
+module purge
+compiler_module=`echo "$compiler" | sed 's:@:/:'`
+module load "$compiler_module"
+
+# clang needs extra flags
 # if [[ $compiler == "clang"* ]]; then
 #     echo got clang
 #     CFLAGS=-fPIC
@@ -75,5 +103,5 @@ done;
 
 done;
 
-spack module tcl rm
-spack module lmod refresh --delete-tree -y
+spack module tcl rm # I only want lmod files, no need to show me modules twice
+spack module lmod refresh --delete-tree -y # refresh lmod stuff
