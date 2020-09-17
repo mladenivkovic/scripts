@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-DESTDIR=/home/mivkov/coding/projekte/online-backup
+DESTDIR=/home/mivkov/coding/small_projects/online-backup
 linklist='original_links.txt'
 
 nolog=false
@@ -141,7 +141,6 @@ bn=`basename "$DESTFILE"` # get basename
 newdirs=${DESTFILE%"$bn"} # figure out what new directories you need to create: for starters, take everything before basename
 newdirs=${newdirs#"$PWD"} # subtract PWD
 newdirs=${newdirs#"$DESTDIR"} # subtract DESTDIR
-
 
 mkdir -p "$DESTDIR"/"$newdirs" # create new dirs if necessary
 fpath="$DESTDIR"/"$DESTFILE" # define full path
