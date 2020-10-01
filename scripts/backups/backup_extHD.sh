@@ -1,53 +1,178 @@
 #!/bin/bash
 
-####################################
+##############################################
 #
-# Backup to ext HD script.
+# Script to back up files to external HD.
 #
-####################################
-
-# tee all output to log file
-set -o errexit
-day=$(date +%Y-%m-%d-%H-%M)
-readonly LOG_FILE=./$day.log
-touch $LOG_FILE
-exec &> >( tee $LOG_FILE )
-exec 2>&1
-
-# What to backup. 
-backup_files="$HOME/.*"\ 
-backup_files="$backup_files ""$HOME/'Calibre Library'"
-backup_files="$backup_files ""$HOME/coding"
-backup_files="$backup_files ""$HOME/Desktop"
-backup_files="$backup_files ""$HOME/Documents"
-backup_files="$backup_files ""$HOME/EPFL"
-backup_files="$backup_files ""$HOME/local"
-backup_files="$backup_files ""$HOME/Music"
-backup_files="$backup_files ""$HOME/Pictures"
-backup_files="$backup_files ""$HOME/scripts"
-backup_files="$backup_files ""$HOME/simulation_archive"
-backup_files="$backup_files ""$HOME/UZH"
-backup_files="$backup_files ""$HOME/virtualenv"
-backup_files="$backup_files ""$HOME/Zotero"
+##############################################
 
 
-# Where to backup to.
-dest="/media/mivkov/BACKUP_LENOVO/tar-archives"
+#---------------------------------------------------------------------------------
+#
+# usage:
+#   $backup_extHD.sh          backs up all directories hardcoded in this script
+#   $backup_extHD.sh <dir>    backs up only given directory, if it is part of 
+#                             hardcoded directories
+#
+#---------------------------------------------------------------------------------
 
-# Create archive filename.
-day=$(date +%Y-%m-%d-%H-%M)
-hostname=$(hostname -s)
-archive_file="$hostname-$day.tgz"
 
-# Print start status message.
-echo "Backing up $backup_files to $dest/$archive_file"
-date
-echo
 
-# Backup the files using tar.
-tar czf $dest/$archive_file $backup_files
+ROOT_BACKUP_DIR=$HOME                    # Root dir to backup
+DATE=`date +%F_%Hh%M`                    # current time
+BACKUP_DIR=/media/mivkov/BACKUP_LENOVO/  # where to store the backup
 
-# Print end status message.
-echo
-echo "Backup finished"
-date
+
+EXCLUDES="" # Define parent directories that are to be excluded here
+EXCLUDES="$EXCLUDES Audiobooks"
+EXCLUDES="$EXCLUDES Downloads"
+EXCLUDES="$EXCLUDES Dropbox"
+EXCLUDES="$EXCLUDES dwhelper"
+EXCLUDES="$EXCLUDES Encfs"
+EXCLUDES="$EXCLUDES google-drive"
+EXCLUDES="$EXCLUDES Music"
+EXCLUDES="$EXCLUDES Podcasts"
+# EXCLUDES="$EXCLUDES "'Soulseek Chat Logs'
+EXCLUDES="$EXCLUDES Steam"
+EXCLUDES="$EXCLUDES simulation_archive"
+EXCLUDES="$EXCLUDES Templates"
+EXCLUDES="$EXCLUDES texmf"
+EXCLUDES="$EXCLUDES Videos"
+
+# generate exclusion string for rsync
+excludestr_rsync=""
+for EX in $EXCLUDES; do
+    excludestr_rsync="$excludestr_rsync ""--exclude=$EX/**"" --exclude=$EX "
+done
+
+# echo "|"$EXCLUDES"|"
+# echo
+# echo $excludestr_rsync
+# exit
+
+
+
+# get and prepare cmdline args
+if [ $# = 0 ]; then 
+    echo "Doing full backup."
+    do_full=true
+    DIR_TO_BACKUP="$ROOT_BACKUP_DIR"
+elif [ $# == 1 ]; then
+    do_full=false
+    dir_given=$1
+    DIR_TO_BACKUP=`realpath $dir_given`
+    if [ ! -d $DIR_TO_BACKUP ]; then
+        echo "Didn't find directory you've provided: '"$dir_given"'"
+        exit 1
+    else
+        echo "Doing partial backup of" "$dir_given"
+    fi
+else
+    echo "Too many cmdline args. I only accept 1 (specific dir to backup) or none (do full backup)"
+    exit 1
+fi
+
+
+# if partial backup:
+if [[ "$do_full" = false ]]; then
+
+    # first check that it's within ROOT_BACKUP_DIR
+    if [[ ! "$DIR_TO_BACKUP" = "$ROOT_BACKUP_DIR"* ]]; then
+        echo "$dir_given" is not in the root backup directory $ROOT_BACKUP_DIR
+        exit 1
+    else
+        echo "Continuing partial backup, is in root dir"
+    fi
+
+    # then check that it's not in an excluded dir
+    for EX in $EXCLUDES; do
+        if [[ "$DIR_TO_BACKUP" = "$EX"* ]]; then
+            echo "$dir_given" is in an excluded backup directory: $EX
+            exit 1
+        fi
+    done
+    echo "Continuing partial backup, not in excludes"
+
+
+    # now add the additional path of the directory to BACKUP_DIR
+    parent_root_dir="$(dirname $ROOT_BACKUP_DIR)"
+    parent_dir_to_backup="$(dirname $DIR_TO_BACKUP)"
+    BACKUP_DIR="$BACKUP_DIR"/"${parent_dir_to_backup#$parent_root_dir}"
+    mkdir -p "$BACKUP_DIR"
+    # example:
+    #   initially:
+    #   BACKUP_DIR = /media/mivkov/backup
+    #   DIR_TO_BACKUP = /home/mivkov/xkcd/oglaf/ToG
+    #
+    #   change into:
+    #   parent_root_dir = /home
+    #   parent_dir_to_backup = /home/mivkov/xkcd/oglaf
+    #   BACKUP_DIR += /mivkov/xkcd
+
+fi
+
+
+
+echo "---Backup started---"
+
+
+# echo "====================================="
+# echo "--- Backing up repos and software ---"
+# echo "====================================="
+# sudo aptik --scripted \
+#     --backup-all \
+#     --skip-users --skip-groups --skip-mounts --skip-home \
+#     --basepath $BACKUP_DIR/aptik-backup
+
+
+echo "====================================="
+echo "Started backup private files"
+echo "====================================="
+# Private files
+
+rsync   --archive \
+        --human-readable \
+        --progress \
+        --stats \
+        --update \
+        --delete-before \
+        --delete-excluded \
+        --exclude=**/*tmp*/ \
+        --exclude=**/*cache*/ \
+        --exclude=**/*Cache*/ \
+        --exclude=**~ \
+        --exclude=/mnt/*/** \
+        --exclude=/media/*/** \
+        --exclude=**/lost+found*/ \
+        --exclude=**/*Trash*/ \
+        --exclude=**/*trash*/ \
+        --exclude=**/.gvfs/ \
+        $excludestr_rsync \
+        --log-file=rsync-backup-private-"$DATE"".log" \
+        "$DIR_TO_BACKUP" "$BACKUP_DIR"
+        # covered by --archive
+        #   --recursive \
+        #   --times \
+        #   --devices \
+        #   --specials \
+        #   --links \
+        #   --perms \
+
+
+# echo "====================================="
+# echo "Started backup root files"
+# echo "====================================="
+# # backup /etc
+# rsync -h --progress --stats -r -t -l -D \
+#     --super --update --delete-before --delete-excluded \
+#     --exclude=**/*tmp*/ \
+#     --exclude=**/*cache*/ \
+#     --exclude=**/*Cache*/ \
+#     --exclude=**~ \
+#     --exclude=**/*Trash*/ \
+#     --exclude=**/*trash*/ \
+#     --log-file=logs/rsync-backup-etc-"$DATE".log \
+#     /etc $BACKUP_DIR_ROOT
+
+echo "---Backup ended---"
+exit 0
