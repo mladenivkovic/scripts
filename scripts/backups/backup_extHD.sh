@@ -38,6 +38,7 @@ EXCLUDES="$EXCLUDES simulation_archive"
 EXCLUDES="$EXCLUDES Templates"
 EXCLUDES="$EXCLUDES texmf"
 EXCLUDES="$EXCLUDES Videos"
+EXCLUDES="$EXCLUDES .dbus"
 
 # generate exclusion string for rsync
 excludestr_rsync=""
@@ -116,27 +117,30 @@ fi
 echo "---Backup started---"
 
 
-# echo "====================================="
-# echo "--- Backing up repos and software ---"
-# echo "====================================="
-# sudo aptik --scripted \
-#     --backup-all \
-#     --skip-users --skip-groups --skip-mounts --skip-home \
-#     --basepath $BACKUP_DIR/aptik-backup
+# =====================================
+# Backing up repos and software
+# =====================================
+sudo aptik --scripted \
+    --backup-all \
+    --skip-users --skip-groups --skip-mounts --skip-home \
+    --basepath $BACKUP_DIR/aptik-backup
 
 
-echo "====================================="
-echo "Started backup private files"
-echo "====================================="
+# =====================================
 # Private files
+# =====================================
+
+echo "$DIR_TO_BACKUP"
 
 rsync   --archive \
+        --verbose \
         --human-readable \
         --progress \
         --stats \
         --update \
-        --delete-before \
-        --delete-excluded \
+        --recursive \
+        --ignore-existing \
+        --delete \
         --exclude=**/*tmp*/ \
         --exclude=**/*cache*/ \
         --exclude=**/*Cache*/ \
@@ -158,6 +162,7 @@ rsync   --archive \
         #   --links \
         #   --perms \
 
+        # --delete-excluded \
 
 # echo "====================================="
 # echo "Started backup root files"

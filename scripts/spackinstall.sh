@@ -9,7 +9,7 @@
 
 
 # my native compiler
-native="gcc@7.5.0"
+native="gcc@9.3.0"
 
 spack install -y lmod %"$native"
 
@@ -17,7 +17,8 @@ spack install -y lmod %"$native"
 source ~/.bashrc_modules
 
 # install compilers
-for compiler in gcc@8.4.0 gcc@9.2.0 gcc@10.2.0; do
+# for compiler in gcc@8.4.0 gcc@9.2.0 gcc@10.2.0; do
+for compiler in gcc@10.2.0; do
     spack install -y "$compiler" %"$native"
 
     # make sure spack knows about its compilers
@@ -36,7 +37,7 @@ done
 # for compiler in gcc@8.4.0 ; do
 # for compiler in gcc@9.2.0 ; do
 # for compiler in gcc@10.2.0 ; do
-for compiler in "$native" gcc@8.4.0 gcc@9.2.0 gcc@10.2.0 ; do
+for compiler in "$native" gcc@10.2.0 ; do
 
 module purge
 compiler_module=`echo "$compiler" | sed 's:@:/:'`
