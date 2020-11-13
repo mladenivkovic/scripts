@@ -40,8 +40,14 @@ done
 for compiler in "$native" gcc@10.2.0 ; do
 
 module purge
-compiler_module=`echo "$compiler" | sed 's:@:/:'`
-module load "$compiler_module"
+if [ "$compiler" == "$native" ]; then
+    echo "skipping native compiler module:" $native
+    compiler_module=""
+else
+    compiler_module=`echo "$compiler" | sed 's:@:/:'`
+    module load "$compiler_module"
+fi
+
 
 # clang needs extra flags
 # if [[ $compiler == "clang"* ]]; then
@@ -81,6 +87,7 @@ done;
 spack install -y hdf5 +cxx +fortran +threadsafe %$compiler
 spack install -y fftw@3.3.8 +openmp %$compiler
 spack install -y fftw@2.1.5 +openmp %$compiler
+# spack install -y grackle@3.2 ^hdf5 %$compiler #can't do grackle without MPI
 
 
 
@@ -89,6 +96,7 @@ spack install -y fftw@2.1.5 +openmp %$compiler
 
 # for dep in openmpi mpich; do
 for dep in openmpi; do
+    module load $dep
 
     for pack in parmetis; do
         spack install -y $pack ^$dep %$compiler
@@ -97,8 +105,10 @@ for dep in openmpi; do
     # +openmp: install with openmp too
     # ^$dep needs to be after +openmp, otherwise all other
     # specifications are taken to be for the dependency
-    spack install -y hdf5 +cxx +fortran +threadsafe +mpi ^$dep %$compiler 
+    spack install -y hdf5 +cxx +fortran +threadsafe +mpi +java ^$dep %$compiler 
+    module load hdf5
     spack install -y grackle@3.2 ^hdf5 ^$dep %$compiler
+    spack install -y hdfview ^hdf5 %$compiler
 done;
 
 
