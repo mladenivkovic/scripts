@@ -108,7 +108,6 @@ for dep in openmpi; do
     spack install -y hdf5 +cxx +fortran +threadsafe +mpi +java ^$dep %$compiler 
     module load hdf5
     spack install -y grackle@3.2 ^hdf5 ^$dep %$compiler
-    spack install -y hdfview ^hdf5 %$compiler
 done;
 
 
