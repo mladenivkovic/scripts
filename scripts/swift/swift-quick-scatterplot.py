@@ -38,9 +38,7 @@ params = {
 plt.rcParams.update(params)
 
 
-# ==========================
 def getargs():
-    # ==========================
     """
     Read cmd line args.
     """
@@ -73,9 +71,7 @@ def getargs():
     return infile, draw_legend
 
 
-# ==========================
 def main():
-    # ==========================
 
     infile, draw_legend = getargs()
 
@@ -107,8 +103,8 @@ def main():
     handles = []
     if "dark_matter" in PPN:
         h1 = ax.scatter(
-            data.stars.coordinates[:, 0],
-            data.stars.coordinates[:, 1],
+            data.dark_matter.coordinates[:, 0],
+            data.dark_matter.coordinates[:, 1],
             fc="red",
             label="DM",
             alpha=0.5,
