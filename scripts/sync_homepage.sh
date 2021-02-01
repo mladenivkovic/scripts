@@ -29,7 +29,7 @@ else
             UNAME=ivkovic
             HOST=login01.astro.unige.ch
             SRC=~/Documents/homepage/
-            DESTDIR=/home/epfl/ivkovic/website/homepage/
+            DESTDIR=/home/astro/ivkovic/website/homepage/
             DEST="$UNAME"@"$HOST":"$DESTDIR"
         ;;
 
@@ -37,7 +37,7 @@ else
             echo "syncing to local machine"
             UNAME=ivkovic
             HOST=login01.astro.unige.ch
-            SRCDIR=/home/epfl/ivkovic/website/homepage/
+            SRCDIR=/home/astro/ivkovic/website/homepage/
             SRC="$UNAME"@"$HOST":"$SRCDIR"
             DEST=~/Documents/homepage/
         ;;
