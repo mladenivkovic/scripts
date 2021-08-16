@@ -154,16 +154,15 @@ def main():
 
     #  plt.show()
 
-    if infile[-5:] == '.hdf5':
-        outfile = infile.replace('.hdf5', '')
-    elif infile[-3:] == '.h5':
-        outfile = infile.replace('.h5', '')
-    outfile += '-scatter.png'
+    if infile[-5:] == ".hdf5":
+        outfile = infile.replace(".hdf5", "")
+    elif infile[-3:] == ".h5":
+        outfile = infile.replace(".h5", "")
+    outfile += "-scatter.png"
 
     plt.savefig(outfile, dpi=200)
 
-    subprocess.run(['eog', outfile])
-
+    subprocess.run(["eog", outfile])
 
 
 if __name__ == "__main__":
