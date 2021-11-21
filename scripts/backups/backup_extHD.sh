@@ -35,6 +35,7 @@ EXCLUDES="$EXCLUDES Podcasts"
 # EXCLUDES="$EXCLUDES "'Soulseek Chat Logs'
 EXCLUDES="$EXCLUDES Steam"
 EXCLUDES="$EXCLUDES simulation_archive/ramses"
+EXCLUDES="$EXCLUDES simulation_archive/new_runs_ramses"
 EXCLUDES="$EXCLUDES simulation_archive/gear"
 EXCLUDES="$EXCLUDES Templates"
 EXCLUDES="$EXCLUDES texmf"
