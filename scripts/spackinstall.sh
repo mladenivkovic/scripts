@@ -110,6 +110,9 @@ for compiler in "$native" gcc@10.2.0 gcc@11.2.0; do
         spack install --reuse -y hdf5@1.10.7 +cxx +fortran +threadsafe +mpi +java ^$dep %$compiler
         module load hdf5
         spack install --reuse -y grackle@3.2 ^hdf5 ^$dep %$compiler
+        # note: grackle-float is a fake package I made.
+        # If you don't want to use this, use +float variant.
+        spack install --reuse -y grackle-float@3.2 ^hdf5 ^$dep %$compiler
     done;
 
 done;
