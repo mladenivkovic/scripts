@@ -141,7 +141,6 @@ rsync   --archive \
         --stats \
         --update \
         --recursive \
-        --ignore-existing \
         --delete \
         --exclude=**/*tmp*/ \
         --exclude=**/*cache*/ \
