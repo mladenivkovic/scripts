@@ -12,9 +12,11 @@
 # my native compiler
 native="gcc@12.1.0"
 
+MYHDF5="hdf5@1.12.2"
+
 # First install lmod
 #----------------------
-spack install -y lmod %"$native"
+# spack install -y lmod %"$native"
 
 # make modules work
 # source ~/.bashrc_modules
@@ -82,8 +84,8 @@ for compiler in "$native"; do
 
     spack install -y openmpi %"$compiler"
     # spack install -y mpich   cflags="$CFLAGS" cxxflags="$CXXFLAGS" fflags="$FFLAGS" %"$compiler"
- 
-    spack module tcl rm # I only want lmod files, no need to show me modules twice
+
+    spack module tcl rm -y # I only want lmod files, no need to show me modules twice
     spack module lmod refresh --delete-tree -y # refresh lmod stuff
 
 
@@ -94,17 +96,17 @@ for compiler in "$native"; do
     # without dependencies
     #~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    for pack in jemalloc gsl metis intel-tbb openblas cblas; do
+    # cblas: doesn't compile...
+    for pack in jemalloc gsl metis intel-tbb openblas; do
         spack install -y $pack %$compiler
     done;
 
     spack install -y fftw@3.3.8 +openmp %$compiler
     spack install -y fftw@2.1.5 +openmp %$compiler
-    spack install --reuse -y hdf5@1.12.2 +cxx +fortran +threadsafe -mpi +java %$compiler
-    # spack install -y grackle@3.2 ^hdf5 %$compiler #can't do grackle without MPI
+    spack install --reuse -y "$MYHDF5" +cxx +fortran +threadsafe -mpi +java %$compiler
+    # spack install -y grackle@3.2 ^"$MYHDF5" %$compiler #can't do grackle without MPI
     spack install -y gdb@12.1 %$compiler
     spack install -y valgrind %$compiler
-
 
     # with dependencies
     #~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -113,7 +115,7 @@ for compiler in "$native"; do
     for dep in openmpi; do
         module load $dep
 
-        packages without any further specifications
+        # packages without any further specifications
         for pack in parmetis; do
             spack install -y $pack ^$dep %$compiler
         done;
@@ -121,18 +123,22 @@ for compiler in "$native"; do
         # +openmp: install with openmp too
         # ^$dep needs to be after +openmp, otherwise all other
         # specifications are taken to be for the dependency
-        spack install --reuse -y hdf5@1.12.2 +cxx +fortran +threadsafe +mpi +java ^$dep %$compiler
+        spack install --reuse -y "$MYHDF5" +cxx +fortran +threadsafe +mpi +java ^$dep %$compiler
         # spack install --reuse -y hdf5-mladen@1.10.7 +cxx +fortran +threadsafe +mpi +java ^$dep %$compiler
-        module load hdf5/1.13.1
-        spack install --reuse -y grackle@3.2 ^hdf5@1.13.1 ^$dep %$compiler
+        spack module tcl rm -y # I only want lmod files, no need to show me modules twice
+        spack module lmod refresh --delete-tree -y # refresh lmod stuff
+        module load hdf5/${MYHDF5#hdf5@}
+
+        
+        spack install --reuse -y grackle@3.2 ^$MYHDF5 ^$dep %$compiler
         # note: grackle-float is a fake package I made.
         # If you don't want to use this, use +float variant.
         # spack install --reuse -y grackle-float@3.2 ^hdf5@1.13.1 ^$dep %$compiler
-        spack install --reuse -y grackle-float@3.2 ^hdf5@1.13.1 ^$dep %$compiler
+        spack install --reuse -y grackle-float@3.2 ^$MYHDF5 ^$dep %$compiler
         spack install --reuse -y sundials@5.1.0 ^$dep %$compiler
     done;
 
 done;
 
-spack module tcl rm # I only want lmod files, no need to show me modules twice
+spack module tcl rm -y # I only want lmod files, no need to show me modules twice
 spack module lmod refresh --delete-tree -y # refresh lmod stuff
