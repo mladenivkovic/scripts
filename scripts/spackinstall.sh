@@ -141,30 +141,25 @@ install_packages() {
 
         load_compiler_module_only $compiler
 
-        # clang needs extra flags
-        # TODO: is this still up to date? Shouldn't you add this to compilers.yml?
-        # if [[ $compiler == "clang"* ]]; then
-        #     echo got clang
-        #     CFLAGS=-fPIC
-        #     CXXFLAGS=-fPIC
-        #     FFLAGS=-fPIC
-        # else
-        #     CFLAGS=
-        #     CXXFLAGS=
-        #     FFLAGS=
-        # fi
-
         #--------------------
         # core dependencies
         #--------------------
 
         additional_specs=""
         if [[ "$compiler" == "clang"* ]]; then
-            additional_specs="~fortran"
+            additional_specs="-fortran"
         fi
 
         for mpi_vendor in ${MPI_list[@]}; do
+            if [[ "$compiler" == "clang"* ]]; then
+                if [[ "$mpi_vendor" == "openmpi"* ]]; then
+                    echo skipping clang openmpi install due to no fortran compiler
+                    continue
+                fi
+            fi
             spack install -y $mpi_vendor $additional_specs %"$compiler"
+
+            load_compiler_module_only $compiler
         done
         # # spack install -y mpich   cflags="$CFLAGS" cxxflags="$CXXFLAGS" fflags="$FFLAGS" %"$compiler"
 
@@ -189,12 +184,14 @@ install_packages() {
             spack install -y $pack $additional_specs %$compiler
         done;
 
-
-        spack install -y fftw@3.3.8 +openmp ~mpi %$compiler
-        spack install -y fftw@2.1.5 +openmp ~mpi %$compiler
         if [[ "$compiler" == "clang"* ]]; then
+            # clang install has trouble with openmp
+            spack install -y fftw@3.3.8 ~mpi %$compiler
+            spack install -y fftw@2.1.5 ~mpi %$compiler
             spack install -y "$MYHDF5" +cxx ~fortran +threadsafe ~mpi +java %$compiler
         else
+            spack install -y fftw@3.3.8 +openmp ~mpi %$compiler
+            spack install -y fftw@2.1.5 +openmp ~mpi %$compiler
             spack install -y "$MYHDF5" +cxx +fortran +threadsafe ~mpi +java %$compiler
         fi
         # spack install -y grackle@3.2 ^"$MYHDF5" %$compiler #can't do grackle without MPI
@@ -229,6 +226,7 @@ install_packages() {
             # ^$dep needs to be after +openmp, otherwise all other
             # specifications are taken to be for the dependency
             if [[ "$compiler" == "clang"* ]]; then
+                # no fortran for clang
                 spack install -y "$MYHDF5" +cxx ~fortran +threadsafe +mpi +java ^$dep %$compiler
             else
                 spack install -y "$MYHDF5" +cxx +fortran +threadsafe +mpi +java ^$dep %$compiler
@@ -242,20 +240,30 @@ install_packages() {
             module load $compiler_module
             module load hdf5/${MYHDF5#hdf5@}
 
-            spack install -y fftw@3.3.8 +openmp +mpi ^$dep $additional_specs %$compiler
-            spack install -y fftw@2.1.5 +openmp +mpi ^$dep $additional_specs %$compiler
+            if [[ "$compiler" == "clang"* ]]; then
+                # no fortran for clang
+                spack install -y "$MYHDF5" +cxx ~fortran +threadsafe +mpi +java ^$dep %$compiler
+                # clang install has trouble with openmp
+                spack install -y fftw@3.3.8 +mpi ^$dep $additional_specs %$compiler
+                spack install -y fftw@2.1.5 +mpi ^$dep $additional_specs %$compiler
+                # no grackle without fortran...
+                # spack install --reuse -y grackle@3.2 ^$MYHDF5 ^$dep $additional_specs %$compiler
+                # no sundials without fortran...
+                spack install --reuse -y sundials@5.1.0 $additional_specs ^$dep $additional_specs %$compiler
+            else
+                spack install -y "$MYHDF5" +cxx +fortran +threadsafe +mpi +java ^$dep %$compiler
+                spack install -y fftw@3.3.8 +openmp +mpi ^$dep $additional_specs %$compiler
+                spack install -y fftw@2.1.5 +openmp +mpi ^$dep $additional_specs %$compiler
+                spack install --reuse -y grackle@3.2 ^$MYHDF5 ^$dep $additional_specs %$compiler
+                # note: grackle-float is a fake package I made.
+                # If you don't want to use this, use +float variant.
+                # spack install --reuse -y grackle-float@3.2 ^$MYHDF5 ^$dep %$compiler
+                spack install --reuse -y sundials@5.1.0 $additional_specs ^$dep $additional_specs %$compiler
+            fi
 
+        done; # loop over MPI variants
 
-            spack install --reuse -y grackle@3.2 ^$MYHDF5 ^$dep $additional_specs %$compiler
-            # note: grackle-float is a fake package I made.
-            # If you don't want to use this, use +float variant.
-            # spack install --reuse -y grackle-float@3.2 ^hdf5@1.13.1 ^$dep %$compiler
-            # spack install --reuse -y grackle-float@3.2 ^$MYHDF5 ^$dep %$compiler
-            spack install --reuse -y sundials@5.1.0 $additional_specs ^$dep $additional_specs %$compiler
-
-        done;
-
-    done;
+    done; # loop over compilers
 
     spack module tcl rm -y # I only want lmod files, no need to show me modules twice
     spack module lmod refresh --delete-tree -y # refresh lmod stuff
