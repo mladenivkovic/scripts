@@ -20,26 +20,19 @@
 
 ROOT_BACKUP_DIR=$HOME                    # Root dir to backup
 DATE=`date +%F_%Hh%M`                    # current time
-BACKUP_DIR=/media/mivkov/BACKUP_LENOVO/  # where to store the backup
+BACKUP_DIR=/media/mivkov/BACKUP_HP/  # where to store the backup
+
+if [ ! -d "$BACKUP_DIR" ]; then
+    echo "Din't find target dir" $BACKUP_DIR
+    exit 1
+fi
 
 
 EXCLUDES="" # Define parent directories that are to be excluded here
 EXCLUDES="$EXCLUDES Audiobooks"
-EXCLUDES="$EXCLUDES Downloads"
 EXCLUDES="$EXCLUDES Dropbox"
-EXCLUDES="$EXCLUDES dwhelper"
-EXCLUDES="$EXCLUDES Encfs"
-EXCLUDES="$EXCLUDES google-drive"
-EXCLUDES="$EXCLUDES Music"
 EXCLUDES="$EXCLUDES Podcasts"
-# EXCLUDES="$EXCLUDES "'Soulseek Chat Logs'
-EXCLUDES="$EXCLUDES Steam"
-EXCLUDES="$EXCLUDES simulation_archive/ramses"
-EXCLUDES="$EXCLUDES simulation_archive/new_runs_ramses"
-EXCLUDES="$EXCLUDES simulation_archive/gear"
-EXCLUDES="$EXCLUDES Templates"
 EXCLUDES="$EXCLUDES texmf"
-EXCLUDES="$EXCLUDES Videos"
 EXCLUDES="$EXCLUDES .dbus"
 
 # generate exclusion string for rsync
@@ -120,15 +113,6 @@ echo "---Backup started---"
 
 
 # =====================================
-# Backing up repos and software
-# =====================================
-sudo aptik --scripted \
-    --backup-all \
-    --skip-users --skip-groups --skip-mounts --skip-home \
-    --basepath $BACKUP_DIR/aptik-backup
-
-
-# =====================================
 # Private files
 # =====================================
 
@@ -142,18 +126,12 @@ rsync   --archive \
         --update \
         --recursive \
         --delete \
-        --exclude=**/*tmp*/ \
-        --exclude=**/*cache*/ \
-        --exclude=**/*Cache*/ \
-        --exclude=**~ \
         --exclude=/mnt/*/** \
         --exclude=/media/*/** \
         --exclude=**/lost+found*/ \
-        --exclude=**/*Trash*/ \
-        --exclude=**/*trash*/ \
         --exclude=**/.gvfs/ \
         $excludestr_rsync \
-        --log-file=rsync-backup-private-"$DATE"".log" \
+        --log-file=rsync-backup-LENOVO-FULL-"$DATE"".log" \
         "$DIR_TO_BACKUP" "$BACKUP_DIR"
         # covered by --archive
         #   --recursive \
@@ -164,21 +142,6 @@ rsync   --archive \
         #   --perms \
 
         # --delete-excluded \
-
-# echo "====================================="
-# echo "Started backup root files"
-# echo "====================================="
-# # backup /etc
-# rsync -h --progress --stats -r -t -l -D \
-#     --super --update --delete-before --delete-excluded \
-#     --exclude=**/*tmp*/ \
-#     --exclude=**/*cache*/ \
-#     --exclude=**/*Cache*/ \
-#     --exclude=**~ \
-#     --exclude=**/*Trash*/ \
-#     --exclude=**/*trash*/ \
-#     --log-file=logs/rsync-backup-etc-"$DATE".log \
-#     /etc $BACKUP_DIR_ROOT
 
 echo "---Backup ended---"
 exit 0
