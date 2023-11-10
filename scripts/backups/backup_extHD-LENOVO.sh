@@ -20,7 +20,7 @@
 
 ROOT_BACKUP_DIR=$HOME                    # Root dir to backup
 DATE=`date +%F_%Hh%M`                    # current time
-BACKUP_DIR=/media/mivkov/BACKUP_HP/  # where to store the backup
+BACKUP_DIR=/media/mivkov/BACKUP_LENOVO/  # where to store the backup
 
 if [ ! -d "$BACKUP_DIR" ]; then
     echo "Din't find target dir" $BACKUP_DIR
