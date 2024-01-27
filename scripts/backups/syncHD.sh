@@ -71,8 +71,9 @@ sync_dir() {
     fi
 
     # check passed arguments.
-    if [[ $# < 2 ]]; then
-        echo "no arguments given. Can't handle that."
+    if [[ "$#" -lt 2 ]]; then
+        echo $#
+        echo "sync_dir(): no arguments given. Can't handle that."
         exit
     fi
 
@@ -122,26 +123,29 @@ sync_dir() {
     excludestr_rsync_HD=""
     while [[ $# > 0 ]]; do
         newarg_local=$1
+        newarg_local_full=$1
 
-        # make full proper paths
-        if [[ "$newarg_local" = /* ]]; then
+        # check full proper paths
+        # WARNING: Don't actually use full paths. 
+        if [[ "$newarg_local_full" = /* ]]; then
             : # this should be a full path. `:` means do nothing.
         else
             # Assume excludes may be relative to source dir
-            newarg_local="$LOCALDIR"/"$newarg_local"
+            newarg_local_full="$LOCALDIR"/"$newarg_local_full"
         fi
-        if [ ! -d "$newarg_local" ]; then
-            echo "WARNING: Directory to exclude doesn't exist on LOCAL. Passed argument was '"$1"', full path is '"$newarg_local"'"
+        if [ ! -d "$newarg_local_full" ]; then
+            echo "WARNING: Directory to exclude doesn't exist on LOCAL. Passed argument was '"$1"', full path is '"$newarg_local_full"'"
         fi
 
         newarg_HD=$1
-        if [[ "$newarg_HD" = /* ]]; then
+        newarg_HD_full=$1
+        if [[ "$newarg_HD_full" = /* ]]; then
             : # this should be a full path. `:` means do nothing.
         else
-            newarg_HD="$HDDIR"/"$newarg_HD"
+            newarg_HD_full="$HDDIR"/"$newarg_HD_full"
         fi
-        if [ ! -d "$newarg_HD" ]; then
-            echo "WARNING: Directory to exclude doesn't exist on HD. Passed argument was '"$1"', full path is '"$newarg_HD"'"
+        if [ ! -d "$newarg_HD_full" ]; then
+            echo "WARNING: Directory to exclude doesn't exist on HD. Passed argument was '"$1"', full path is '"$newarg_HD_full"'"
         fi
 
      
@@ -151,8 +155,15 @@ sync_dir() {
     done
 
 
+    echo LOCAL
+    echo $excludestr_rsync_local
 
-    DATE=`date +%F_%Hh%M`                     # current time
+    echo HD
+    echo $excludestr_rsync_HD
+
+
+
+    DATE=`date +%F_%Hh%M` # current time
     mkdir -p logs
 
     RSYNC_CMD="rsync    --archive \
@@ -193,7 +204,10 @@ sync_dir() {
 
 
 find_HD_path
-sync_dir $HOME/Work Work logs
+sync_dir $HOME/Work Work
+sync_dir $HOME/Pictures/Memories Pictures/Memories videos childhood Pre-2018 2018 2019 2020 2021 2022
+sync_dir $HOME/Documents/Bewerbungen Documents/Bewerbungen
+sync_dir $HOME/Documents/Wichtige_Dokumente Documents/Wichtige_Dokumente
 
 
 echo DONE.
