@@ -72,7 +72,6 @@ sync_dir() {
 
     # check passed arguments.
     if [[ "$#" -lt 2 ]]; then
-        echo $#
         echo "sync_dir(): no arguments given. Can't handle that."
         exit
     fi
@@ -153,15 +152,6 @@ sync_dir() {
         excludestr_rsync_HD="$excludestr_rsync_HD ""--exclude=$newarg_HD/**"" --exclude=$newarg_HD "
         shift
     done
-
-
-    echo LOCAL
-    echo $excludestr_rsync_local
-
-    echo HD
-    echo $excludestr_rsync_HD
-
-
 
     DATE=`date +%F_%Hh%M` # current time
     mkdir -p logs
