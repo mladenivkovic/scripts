@@ -30,14 +30,11 @@ find_HD_path(){
 
     if [ ! -d "$HDPATH" ]; then
         echo "Din't find target dir" $DESTDIR "trying second option"
-        echo TODO: IMPLEMENT SECOND OPTION
-        exit 1
-        # try the second HDD
-        # DESTDIR=/home/mivkov/Encfs/BACKUP_HP_HOME/  # where to store the backup
-        # if [ ! -d "$DESTDIR" ]; then
-        #     echo "Din't find target dir" $DESTDIR
-        #     exit 1
-        # fi
+        HDPATH='/media/mivkov/archive/'
+        if [ ! -d "$HDPATH" ]; then
+            echo "Din't find target dir" $DESTDIR 
+            exit 1
+        fi
     fi
 }
 

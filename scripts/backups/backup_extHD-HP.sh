@@ -11,7 +11,7 @@
 #
 # usage:
 #   $backup_extHD.sh          backs up all directories hardcoded in this script
-#   $backup_extHD.sh <dir>    backs up only given directory, if it is part of 
+#   $backup_extHD.sh <dir>    backs up only given directory, if it is part of
 #                             hardcoded directories
 #
 #---------------------------------------------------------------------------------
@@ -48,6 +48,15 @@ EXCLUDES="$EXCLUDES Templates"
 EXCLUDES="$EXCLUDES texmf"
 EXCLUDES="$EXCLUDES Videos"
 EXCLUDES="$EXCLUDES .dbus"
+EXCLUDES="$EXCLUDES **/Peano/**/celldata/**"
+EXCLUDES="$EXCLUDES **/Peano/**/globaldata/**"
+EXCLUDES="$EXCLUDES **/Peano/**/observers/**"
+EXCLUDES="$EXCLUDES **/Peano/**/repositories/**"
+EXCLUDES="$EXCLUDES **/Peano/**/vertexdata/**"
+EXCLUDES="$EXCLUDES **/Peano/**/*.o"
+EXCLUDES="$EXCLUDES **/Peano/**/*.Po"
+EXCLUDES="$EXCLUDES **/Peano/doxygen-html/**"
+EXCLUDES="$EXCLUDES **/swiftsim/**/*.o"
 
 # generate exclusion string for rsync
 excludestr_rsync=""
@@ -63,7 +72,7 @@ done
 
 
 # get and prepare cmdline args
-if [ $# = 0 ]; then 
+if [ $# = 0 ]; then
     echo "Doing full backup."
     do_full=true
     DIR_TO_BACKUP="$ROOT_BACKUP_DIR"
