@@ -35,35 +35,41 @@ if [ ! -d "$BACKUP_DIR"/$HOMEDIR_BASENAME ]; then
 fi
 
 
-EXCLUDES="" # Define parent directories that are to be excluded here
-EXCLUDES="$EXCLUDES Audiobooks"
-EXCLUDES="$EXCLUDES Downloads"
-EXCLUDES="$EXCLUDES Dropbox"
-EXCLUDES="$EXCLUDES dwhelper"
-EXCLUDES="$EXCLUDES Encfs"
-EXCLUDES="$EXCLUDES google-drive"
-EXCLUDES="$EXCLUDES Music"
-EXCLUDES="$EXCLUDES Podcasts"
-# EXCLUDES="$EXCLUDES "'Soulseek Chat Logs'
-EXCLUDES="$EXCLUDES Steam"
-EXCLUDES="$EXCLUDES Templates"
-EXCLUDES="$EXCLUDES texmf"
-EXCLUDES="$EXCLUDES Videos"
-EXCLUDES="$EXCLUDES .dbus"
-EXCLUDES="$EXCLUDES **/Peano/**/celldata/**"
-EXCLUDES="$EXCLUDES **/Peano/**/globaldata/**"
-EXCLUDES="$EXCLUDES **/Peano/**/observers/**"
-EXCLUDES="$EXCLUDES **/Peano/**/repositories/**"
-EXCLUDES="$EXCLUDES **/Peano/**/vertexdata/**"
-EXCLUDES="$EXCLUDES **/Peano/**/*.o"
-EXCLUDES="$EXCLUDES **/Peano/**/*.Po"
-EXCLUDES="$EXCLUDES **/Peano/doxygen-html/**"
-EXCLUDES="$EXCLUDES **/swiftsim/**/*.o"
+EXCLUDEDIRS="" # Define parent directories that are to be excluded here
+EXCLUDEDIRS="$EXCLUDEDIRS Audiobooks"
+EXCLUDEDIRS="$EXCLUDEDIRS Downloads"
+EXCLUDEDIRS="$EXCLUDEDIRS Dropbox"
+EXCLUDEDIRS="$EXCLUDEDIRS dwhelper"
+EXCLUDEDIRS="$EXCLUDEDIRS Encfs"
+EXCLUDEDIRS="$EXCLUDEDIRS google-drive"
+EXCLUDEDIRS="$EXCLUDEDIRS Music"
+EXCLUDEDIRS="$EXCLUDEDIRS Podcasts"
+# EXCLUDEDIRS="$EXCLUDEDIRS "'Soulseek Chat Logs'
+EXCLUDEDIRS="$EXCLUDEDIRS Steam"
+EXCLUDEDIRS="$EXCLUDEDIRS Templates"
+EXCLUDEDIRS="$EXCLUDEDIRS texmf"
+EXCLUDEDIRS="$EXCLUDEDIRS Videos"
+EXCLUDEDIRS="$EXCLUDEDIRS .dbus"
+
+EXCLUDEFILES="" # Define file patterns that are to be excluded here
+EXCLUDEFILES="$EXCLUDEFILES **/Peano/**/celldata/**"
+EXCLUDEFILES="$EXCLUDEFILES **/Peano/**/globaldata/**"
+EXCLUDEFILES="$EXCLUDEFILES **/Peano/**/observers/**"
+EXCLUDEFILES="$EXCLUDEFILES **/Peano/**/repositories/**"
+EXCLUDEFILES="$EXCLUDEFILES **/Peano/**/vertexdata/**"
+EXCLUDEFILES="$EXCLUDEFILES **/Peano/**/*.o"
+EXCLUDEFILES="$EXCLUDEFILES **/Peano/**/*.a"
+EXCLUDEFILES="$EXCLUDEFILES **/Peano/**/*.Po"
+EXCLUDEFILES="$EXCLUDEFILES **/Peano/doxygen-html/**"
+EXCLUDEFILES="$EXCLUDEFILES **/swiftsim/**/*.o"
 
 # generate exclusion string for rsync
 excludestr_rsync=""
-for EX in $EXCLUDES; do
+for EX in $EXCLUDEDIRS; do
     excludestr_rsync="$excludestr_rsync ""--exclude=$EX/**"" --exclude=$EX "
+done
+for EX in $EXCLUDEFILES; do
+    excludestr_rsync="$excludestr_rsync --exclude=$EX "
 done
 
 # echo "|"$EXCLUDES"|"
