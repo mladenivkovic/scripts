@@ -14,20 +14,24 @@ Sync up all directories hardcoded in this script onto hard drives,
 whose paths are also hardcoded in this script.
 
 usage:
-    $ syncHD.sh               backs up all directories hardcoded in this script
-    $ syncHD.sh  -h           show this message and quit
+    $ syncHD.sh                      backs up all directories hardcoded in this script
+
+    $ syncHD.sh  -h                  show this message and quit
                  --help
-    $ syncHD.sh  -f           Don't syncronize to and from the HD backups, but
-                 --force      forcibly overwrite what is on the harddrives with
-                 -o           the current state.
-                 -ow
-                 --overwrite
+
+    $ syncHD.sh  -owl                Don't syncronize to and from the HD backups, but
+                 --overwrite-local   forcibly overwrite LOCAL STATE with what's on the HD
+
+    $ syncHD.sh  -owh                Don't syncronize to and from the HD backups, but
+                 --overwrite-hd      forcibly overwrite HD STATE with what's on the local
+                                     machine
 "
 #-----------------------------------------------------------------------
 # First, let's read the cmdline args.
 #-----------------------------------------------------------------------
 
-OVERWRITE="no"
+OVERWRITE_LOCAL="no"
+OVERWRITE_HD="no"
 while [[ $# > 0 ]]; do
     arg="$1"
 
@@ -37,10 +41,14 @@ while [[ $# > 0 ]]; do
             exit 0
         ;;
 
-        -f | --force | -o | -ow | --overwrite)
-            OVERWRITE="yes"
-            echo "Will overwrite backup instead of syncing"
+        -owl | --overwrite-local)
+            OVERWRITE_LOCAL="yes"
+            echo "Will overwrite LOCAL MACHINE STATE instead of syncing"
         ;;
+
+        -owh | --overwrite-hd)
+            OVERWRITE_HD="yes"
+            echo "Will overwrite HD STATE instead of syncing"
 
     esac
 
@@ -236,22 +244,37 @@ sync_dir() {
     RSYNC_CMD_DELETE_FIRST=${RSYNC_CMD_DELETE_FIRST}${RSYNC_CMD_DEFAULT_EXCLUDES}
 
 
-    if [ ${OVERWRITE} == "yes" ]; then
+    if [ ${OVERWRITE_LOCAL} == "yes" ]; then
         echo "==================================================================================="
         echo "OVERWRITING" $LOCALDIR " --> "  $HDDIR
         echo "==================================================================================="
         $RSYNC_CMD_DELETE_FIRST_DRY_RUN $excludestr_rsync_local "$LOCALDIR"/ "$HDDIR"
         while true; do
-            read -p "That was a dry run. Do you wish to continue? (y/n) " yn
+            read -p "That was a dry run. This will overwrite your HD STATE. Do you wish to continue? (y/n) " yn
             case $yn in
                 [Yy]* ) break;;
-                [Nn]* ) echo "exiting."; exit;;
+                [Nn]* ) echo "exiting."; return;;
                 * ) echo "Please answer yes or no.";;
             esac
         done
-        $RSYNC_CMD_DELETE_FIRST $excludestr_rsync_local --log-file=logs/rsync-L2HD-overwrite-"$DATE"".log" "$LOCALDIR"/ "$HDDIR"
+        # $RSYNC_CMD_DELETE_FIRST $excludestr_rsync_local --log-file=logs/rsync-L2HD-overwrite-"$DATE"".log" "$LOCALDIR"/ "$HDDIR"
 
-        # When overwriting, we only do L->HD.
+
+    elif [ ${OVERWRITE_HD} == "yes" ]; then
+
+        echo "==================================================================================="
+        echo "OVERWRITING" $HDDIR " --> "  $LOCALDIR
+        echo "==================================================================================="
+        $RSYNC_CMD_DELETE_FIRST_DRY_RUN $excludestr_rsync_local "$HDDIR"/ "$LOCALDIR"
+        while true; do
+            read -p "That was a dry run. This will overwrite your LOCAL STATE. Do you wish to continue? (y/n) " yn
+            case $yn in
+                [Yy]* ) break;;
+                [Nn]* ) echo "exiting."; return;;
+                * ) echo "Please answer yes or no.";;
+            esac
+        done
+        # $RSYNC_CMD_DELETE_FIRST $excludestr_rsync_local --log-file=logs/rsync-HD2L-overwrite-"$DATE"".log" "$HDDIR"/ "$LOCALDIR"
 
     else
         echo "SYNCING"
