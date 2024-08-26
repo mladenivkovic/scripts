@@ -18,17 +18,17 @@
 
 
 
-ROOT_BACKUP_DIR=$HOME                    # Root dir to backup
+ROOT_BACKUP_FROM_DIR=$HOME               # Root dir to backup
 DATE=`date +%F_%Hh%M`                    # current time
-BACKUP_DIR=/home/mivkov/Encfs/BACKUP_HP/  # where to store the backup
+BACKUP_TO_DIR=/home/mivkov/Encfs/BACKUP_HP/  # where to store the backup
 HOMEDIR_BASENAME=`basename $HOME`
 
-if [ ! -d "$BACKUP_DIR"/$HOMEDIR_BASENAME ]; then
-    echo "Din't find target dir '"$BACKUP_DIR/$HOMEDIR_BASENAME"', trying second option"
+if [ ! -d "$BACKUP_TO_DIR"/$HOMEDIR_BASENAME ]; then
+    echo "Din't find target dir '"$BACKUP_TO_DIR/$HOMEDIR_BASENAME"', trying second option"
     # try the second HDD
-    BACKUP_DIR=/home/mivkov/Encfs/BACKUP_HP_HOME/  # where to store the backup
-    if [ ! -d "$BACKUP_DIR/$HOMEDIR_BASENAME" ]; then
-        echo "Din't find target dir '"$BACKUP_DIR/$HOMEDIR_BASENAME"', exiting"
+    BACKUP_TO_DIR=/home/mivkov/Encfs/BACKUP_HP_HOME/  # where to store the backup
+    if [ ! -d "$BACKUP_TO_DIR/$HOMEDIR_BASENAME" ]; then
+        echo "Din't find target dir '"$BACKUP_TO_DIR/$HOMEDIR_BASENAME"', exiting"
         echo "Did you remember to mount the encrypted drives?"
         exit 1
     fi
@@ -83,11 +83,11 @@ done
 if [ $# = 0 ]; then
     echo "Doing full backup."
     do_full=true
-    DIR_TO_BACKUP="$ROOT_BACKUP_DIR"
+    BACKUP_FROM_DIR="$ROOT_BACKUP_FROM_DIR"
 elif [ $# == 1 ]; then
     do_full=false
     dir_given=$1
-    DIR_TO_BACKUP=`realpath $dir_given`
+    BACKUP_FROM_DIR=`realpath $dir_given`
     if [ ! -d $DIR_TO_BACKUP ]; then
         echo "Didn't find directory you've provided: '"$dir_given"'"
         exit 1
@@ -103,9 +103,9 @@ fi
 # if partial backup:
 if [[ "$do_full" = false ]]; then
 
-    # first check that it's within ROOT_BACKUP_DIR
-    if [[ ! "$DIR_TO_BACKUP" = "$ROOT_BACKUP_DIR"* ]]; then
-        echo "$dir_given" is not in the root backup directory $ROOT_BACKUP_DIR
+    # first check that it's within ROOT_BACKUP_FROM_DIR
+    if [[ ! "$BACKUP_FROM_DIR" = "$ROOT_BACKUP_FROM_DIR"* ]]; then
+        echo "$BACKUP_FROM_DIR" is not in the root backup directory $ROOT_BACKUP_FROM_DIR
         exit 1
     else
         echo "Continuing partial backup, is in root dir"
@@ -113,28 +113,28 @@ if [[ "$do_full" = false ]]; then
 
     # then check that it's not in an excluded dir
     for EX in $EXCLUDES; do
-        if [[ "$DIR_TO_BACKUP" = "$EX"* ]]; then
-            echo "$dir_given" is in an excluded backup directory: $EX
+        if [[ "$BACKUP_FROM_DIR" = "$EX"* ]]; then
+            echo "$BACKUP_FROM_DIR" is in an excluded backup directory: $EX
             exit 1
         fi
     done
     echo "Continuing partial backup, not in excludes"
 
 
-    # now add the additional path of the directory to BACKUP_DIR
-    parent_root_dir="$(dirname $ROOT_BACKUP_DIR)"
-    parent_dir_to_backup="$(dirname $DIR_TO_BACKUP)"
-    BACKUP_DIR="$BACKUP_DIR"/"${parent_dir_to_backup#$parent_root_dir}"
-    mkdir -p "$BACKUP_DIR"
+    # now add the additional path of the directory to BACKUP_TO_DIR
+    parent_root_dir="$(dirname $ROOT_BACKUP_FROM_DIR)"
+    parent_dir_to_backup="$(dirname $BACKUP_FROM_DIR)"
+    BACKUP_TO_DIR="$BACKUP_TO_DIR"/"${parent_dir_to_backup#$parent_root_dir}"
+    mkdir -p "$BACKUP_TO_DIR"
     # example:
     #   initially:
-    #   BACKUP_DIR = /media/mivkov/backup
-    #   DIR_TO_BACKUP = /home/mivkov/xkcd/oglaf/ToG
+    #   BACKUP_TO_DIR = /media/mivkov/backup
+    #   BACKUP_FROM_DIR = /home/mivkov/xkcd/oglaf/ToG
     #
     #   change into:
     #   parent_root_dir = /home
     #   parent_dir_to_backup = /home/mivkov/xkcd/oglaf
-    #   BACKUP_DIR += /mivkov/xkcd
+    #   BACKUP_TO_DIR += /mivkov/xkcd
 
 fi
 
@@ -147,7 +147,7 @@ echo "---Backup started---"
 # Private files
 # =====================================
 
-echo "$DIR_TO_BACKUP"
+echo "$BACKUP_FROM_DIR"
 
 rsync   --archive \
         --verbose \
@@ -169,7 +169,7 @@ rsync   --archive \
         --exclude=**/.gvfs/ \
         $excludestr_rsync \
         --log-file=rsync-backup-HP-"$DATE"".log" \
-        "$DIR_TO_BACKUP" "$BACKUP_DIR"
+        "$BACKUP_FROM_DIR" "$BACKUP_TO_DIR"
         # covered by --archive
         #   --recursive \
         #   --times \
@@ -193,7 +193,7 @@ rsync   --archive \
 #     --exclude=**/*Trash*/ \
 #     --exclude=**/*trash*/ \
 #     --log-file=logs/rsync-backup-etc-"$DATE".log \
-#     /etc $BACKUP_DIR_ROOT
+#     /etc $BACKUP_TO_DIR_ROOT
 
 echo "---Backup ended---"
 exit 0

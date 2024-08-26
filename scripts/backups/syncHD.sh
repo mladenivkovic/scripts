@@ -49,6 +49,14 @@ while [[ $# > 0 ]]; do
         -owh | --overwrite-hd)
             OVERWRITE_HD="yes"
             echo "Will overwrite HD STATE instead of syncing"
+        ;;
+
+        * )
+        echo "Unknown cmdline arg '"$arg"'"
+        echo
+        echo $errmsg
+        exit
+        ;;
 
     esac
 
@@ -244,9 +252,26 @@ sync_dir() {
     RSYNC_CMD_DELETE_FIRST=${RSYNC_CMD_DELETE_FIRST}${RSYNC_CMD_DEFAULT_EXCLUDES}
 
 
-    if [ ${OVERWRITE_LOCAL} == "yes" ]; then
+    if [ "$OVERWRITE_LOCAL" == "yes" ]; then
         echo "==================================================================================="
-        echo "OVERWRITING" $LOCALDIR " --> "  $HDDIR
+        echo "OVERWRITING" $LOCALDIR " with "  $HDDIR
+        echo "==================================================================================="
+        $RSYNC_CMD_DELETE_FIRST_DRY_RUN $excludestr_rsync_local "$HDDIR"/ "$LOCALDIR"
+        while true; do
+            read -p "That was a dry run. This will overwrite your LOCAL MACHINE STATE. Do you wish to continue? (y/n) " yn
+            case $yn in
+                [Yy]* ) break;;
+                [Nn]* ) echo "exiting."; return;;
+                * ) echo "Please answer yes or no.";;
+            esac
+        done
+        $RSYNC_CMD_DELETE_FIRST $excludestr_rsync_local --log-file=logs/rsync-HD2L-overwrite-"$DATE"".log" "$HDDIR"/ "$LOCALDIR"
+
+
+    elif [ "$OVERWRITE_HD" == "yes" ]; then
+
+        echo "==================================================================================="
+        echo "OVERWRITING" $HDDIR " with "  $LOCALDIR
         echo "==================================================================================="
         $RSYNC_CMD_DELETE_FIRST_DRY_RUN $excludestr_rsync_local "$LOCALDIR"/ "$HDDIR"
         while true; do
@@ -257,37 +282,23 @@ sync_dir() {
                 * ) echo "Please answer yes or no.";;
             esac
         done
-        # $RSYNC_CMD_DELETE_FIRST $excludestr_rsync_local --log-file=logs/rsync-L2HD-overwrite-"$DATE"".log" "$LOCALDIR"/ "$HDDIR"
-
-
-    elif [ ${OVERWRITE_HD} == "yes" ]; then
-
-        echo "==================================================================================="
-        echo "OVERWRITING" $HDDIR " --> "  $LOCALDIR
-        echo "==================================================================================="
-        $RSYNC_CMD_DELETE_FIRST_DRY_RUN $excludestr_rsync_local "$HDDIR"/ "$LOCALDIR"
-        while true; do
-            read -p "That was a dry run. This will overwrite your LOCAL STATE. Do you wish to continue? (y/n) " yn
-            case $yn in
-                [Yy]* ) break;;
-                [Nn]* ) echo "exiting."; return;;
-                * ) echo "Please answer yes or no.";;
-            esac
-        done
-        # $RSYNC_CMD_DELETE_FIRST $excludestr_rsync_local --log-file=logs/rsync-HD2L-overwrite-"$DATE"".log" "$HDDIR"/ "$LOCALDIR"
+        $RSYNC_CMD_DELETE_FIRST $excludestr_rsync_local --log-file=logs/rsync-L2HD-overwrite-"$DATE"".log" "$LOCALDIR"/ "$HDDIR"
 
     else
         echo "SYNCING"
+        echo $OVERWRITE_HD
+        echo $OVERWRITE_LOCAL
+
         # Sync LOCAL to HD
         echo "==================================================================================="
         echo "TRANSFERING" $LOCALDIR " --> "  $HDDIR
         echo "==================================================================================="
-        $RSYNC_CMD $excludestr_rsync_local --log-file=logs/rsync-L2HD-"$DATE"".log" "$LOCALDIR"/ "$HDDIR"
+        # $RSYNC_CMD $excludestr_rsync_local --log-file=logs/rsync-L2HD-"$DATE"".log" "$LOCALDIR"/ "$HDDIR"
         # Sync HD to LOCAL
         echo "==================================================================================="
         echo "TRANSFERING" $HDDIR " --> "  $LOCALDIR
         echo "==================================================================================="
-        $RSYNC_CMD $excludestr_rsync_HD --log-file=logs/rsync-HD2L-"$DATE"".log" "$HDDIR"/ "$LOCALDIR"
+        # $RSYNC_CMD $excludestr_rsync_HD --log-file=logs/rsync-HD2L-"$DATE"".log" "$HDDIR"/ "$LOCALDIR"
     fi
 
 
@@ -298,7 +309,7 @@ sync_dir() {
 find_HD_path
 # note: everything past the 2nd arg is to be excluded
 sync_dir $HOME/Work Work
-sync_dir $HOME/Documents/Bewerbungen Documents/Bewerbungen
+# sync_dir $HOME/Documents/Bewerbungen Documents/Bewerbungen
 sync_dir $HOME/Zotero Zotero
 
 if [ ${INCLUDE_PRIVATE} = "yes" ]; then
