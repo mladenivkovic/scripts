@@ -21,13 +21,15 @@
 ROOT_BACKUP_DIR=$HOME                    # Root dir to backup
 DATE=`date +%F_%Hh%M`                    # current time
 BACKUP_DIR=/home/mivkov/Encfs/BACKUP_HP/  # where to store the backup
+HOMEDIR_BASENAME=`basename $HOME`
 
-if [ ! -d "$BACKUP_DIR" ]; then
-    echo "Din't find target dir" $BACKUP_DIR "trying second option"
+if [ ! -d "$BACKUP_DIR"/$HOMEDIR_BASENAME ]; then
+    echo "Din't find target dir '"$BACKUP_DIR/$HOMEDIR_BASENAME"', trying second option"
     # try the second HDD
     BACKUP_DIR=/home/mivkov/Encfs/BACKUP_HP_HOME/  # where to store the backup
-    if [ ! -d "$BACKUP_DIR" ]; then
-        echo "Din't find target dir" $BACKUP_DIR
+    if [ ! -d "$BACKUP_DIR/$HOMEDIR_BASENAME" ]; then
+        echo "Din't find target dir '"$BACKUP_DIR/$HOMEDIR_BASENAME"', exiting"
+        echo "Did you remember to mount the encrypted drives?"
         exit 1
     fi
 fi
