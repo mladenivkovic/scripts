@@ -309,7 +309,6 @@ sync_dir() {
 find_HD_path
 # note: everything past the 2nd arg is to be excluded
 sync_dir $HOME/Work Work
-# sync_dir $HOME/Documents/Bewerbungen Documents/Bewerbungen
 sync_dir $HOME/Zotero Zotero
 
 if [ ${INCLUDE_PRIVATE} = "yes" ]; then
