@@ -104,7 +104,7 @@ find_HD_path(){
 #
 # LOCALDIR :    directory on your local machine
 # HDDIR :       directory on your HD
-# `exclude#` :  optional strings to add to the rsync call to exclude
+# `exclude` :  optional strings to add to the rsync call to exclude
 #               whatever you want excluded. The paths may be relative
 #               to LOCALDIR and HDDIR.
 #------------------------------------------------------------------------
@@ -310,6 +310,7 @@ sync_dir $HOME/Zotero Zotero
 if [ ${INCLUDE_PRIVATE} = "yes" ]; then
     sync_dir $HOME/Pictures/Memories Pictures/Memories videos childhood Pre-2018 2018 2019 2020 2021 2022
     sync_dir $HOME/Documents/Wichtige_Dokumente Documents/Wichtige_Dokumente
+    sync_dir $HOME/.ao3statscraper .ao3statscraper ao3statscraper.conf.pkl ao3statscraper.conf.yml
 fi
 
 
