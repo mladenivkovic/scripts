@@ -77,7 +77,7 @@ done
 find_HD_path(){
 
     HOMEDIR_BASENAME=`basename $HOME`
-    HDPATH="/media/$HOMEDIR_BASENAME/WD free/"
+    HDPATH="/run/media/$HOMEDIR_BASENAME/WD free/sync/"
     # This is the "home" HD. Include private/personal documents in the sync.
     INCLUDE_PRIVATE="yes"
 
