@@ -1,1 +1,0 @@
-../migrate_ubuntu/spackinstall.sh
