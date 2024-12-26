@@ -306,6 +306,7 @@ find_HD_path
 # note: everything past the 2nd arg is to be excluded
 sync_dir $HOME/Work Work
 sync_dir $HOME/Zotero Zotero
+sync_dir $HOME/calibre_library calibre_library
 
 if [ ${INCLUDE_PRIVATE} = "yes" ]; then
     sync_dir $HOME/Pictures/Memories Pictures/Memories videos childhood Pre-2018 2018 2019 2020 2021 2022
