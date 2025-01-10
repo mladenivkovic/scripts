@@ -25,14 +25,28 @@ HOMEDIR_BASENAME=`basename $HOME`
 
 if [ ! -d "$BACKUP_TO_DIR"/$HOMEDIR_BASENAME ]; then
     echo "Din't find target dir '"$BACKUP_TO_DIR/$HOMEDIR_BASENAME"', trying second option"
+
     # try the second HDD
+    found_dir="false"
     BACKUP_TO_DIR=/home/mivkov/Encfs/BACKUP_HP_HOME/  # where to store the backup
     if [ ! -d "$BACKUP_TO_DIR/$HOMEDIR_BASENAME" ]; then
-        echo "Din't find target dir '"$BACKUP_TO_DIR/$HOMEDIR_BASENAME"', exiting"
-        echo "Did you remember to mount the encrypted drives?"
-        exit 1
+        echo "Din't find target dir '"$BACKUP_TO_DIR/$HOMEDIR_BASENAME"', trying third option"
+    else
+        found_dir="true"
+    fi
+
+    if [[ "$found_dir" == "false" ]]; then
+        # try the third HDD
+        BACKUP_TO_DIR=/home/mivkov/Encfs/BACKUP_HP_WORK/  # where to store the backup
+        if [ ! -d "$BACKUP_TO_DIR/$HOMEDIR_BASENAME" ]; then
+            echo "Din't find target dir '"$BACKUP_TO_DIR/$HOMEDIR_BASENAME"', exiting"
+            echo "Did you remember to mount the encrypted drives?"
+            exit 1
+        fi
     fi
 fi
+
+echo Writing backup to $BACKUP_TO_DIR
 
 
 EXCLUDEDIRS="" # Define parent directories that are to be excluded here
@@ -44,7 +58,6 @@ EXCLUDEDIRS="$EXCLUDEDIRS Encfs"
 EXCLUDEDIRS="$EXCLUDEDIRS google-drive"
 EXCLUDEDIRS="$EXCLUDEDIRS Music"
 EXCLUDEDIRS="$EXCLUDEDIRS Podcasts"
-# EXCLUDEDIRS="$EXCLUDEDIRS "'Soulseek Chat Logs'
 EXCLUDEDIRS="$EXCLUDEDIRS Steam"
 EXCLUDEDIRS="$EXCLUDEDIRS Templates"
 EXCLUDEDIRS="$EXCLUDEDIRS texmf"
