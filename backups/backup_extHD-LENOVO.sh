@@ -11,16 +11,16 @@
 #
 # usage:
 #   $backup_extHD.sh          backs up all directories hardcoded in this script
-#   $backup_extHD.sh <dir>    backs up only given directory, if it is part of 
+#   $backup_extHD.sh <dir>    backs up only given directory, if it is part of
 #                             hardcoded directories
 #
 #---------------------------------------------------------------------------------
 
 
 
-ROOT_BACKUP_DIR=$HOME                    # Root dir to backup
-DATE=`date +%F_%Hh%M`                    # current time
-BACKUP_DIR=/media/mivkov/BACKUP_LENOVO/  # where to store the backup
+ROOT_BACKUP_DIR=$HOME                        # Root dir to backup
+DATE=`date +%F_%Hh%M`                        # current time
+BACKUP_DIR=/run/media/mivkov/BACKUP_LENOVO/  # where to store the backup
 
 if [ ! -d "$BACKUP_DIR" ]; then
     echo "Din't find target dir" $BACKUP_DIR
@@ -32,6 +32,8 @@ EXCLUDES="" # Define parent directories that are to be excluded here
 EXCLUDES="$EXCLUDES Audiobooks"
 EXCLUDES="$EXCLUDES Dropbox"
 EXCLUDES="$EXCLUDES Podcasts"
+EXCLUDES="$EXCLUDES Downloads"
+EXCLUDES="$EXCLUDES Encfs"
 EXCLUDES="$EXCLUDES texmf"
 EXCLUDES="$EXCLUDES .dbus"
 
@@ -49,7 +51,7 @@ done
 
 
 # get and prepare cmdline args
-if [ $# = 0 ]; then 
+if [ $# = 0 ]; then
     echo "Doing full backup."
     do_full=true
     DIR_TO_BACKUP="$ROOT_BACKUP_DIR"
