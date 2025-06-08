@@ -69,7 +69,6 @@ if [[ "$PERSONAL" == "true" || "$ALL" == "true" ]]; then
   $rclone_cmd $HOME/Pictures/Memories/2024 protondrive_remote:sync/Pictures/Memories/2024
   $rclone_cmd $HOME/Pictures/Memories/2025 protondrive_remote:sync/Pictures/Memories/2025
 
-  $rclone_cmd $HOME/Documents/important protondrive_remote:sync/Documents/important \
-    --exclude=**/recovery/** --exclude=recovery/**
+  $rclone_cmd $HOME/Documents/important protondrive_remote:sync/Documents/important --exclude=**/recovery/** --exclude=recovery/**
   $rclone_cmd $HOME/.ao3statscraper protondrive_remote:sync/.ao3statscraper --exclude=ao3statscraper.conf.pkl --exclude=ao3statscraper.conf.yml
 fi
