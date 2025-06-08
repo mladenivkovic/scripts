@@ -6,13 +6,17 @@ PERSONAL="true"
 
 HOST=`hostname`
 HOSTNAME_LENOVO_THINKPAD="mladen-lenovoThinkpad"
+HOSTNAME_HP_PROBOOK="mivkov-hpprobook"
 
 DO_LENOVO_THINKPAD="false"
-DO_HP="false"
+DO_HP_PROBOOK="false"
 
 case $HOST in
   $HOSTNAME_LENOVO_THINKPAD )
     DO_LENOVO_THINKPAD="true"
+  ;;
+  $HOSTNAME_HP_PROBOOK )
+    DO_HP_PROBOOK="true"
   ;;
   *)
     echo "Unrecognized hostname. Adapt script before you break things."
@@ -36,8 +40,9 @@ esac
 
 
 # rclone_cmd="rclone sync -l -v"
-# rclone_cmd="rclone bisync -l -v --checksum --resync --resync-mode=newer --dry-run"
-rclone_cmd="rclone bisync -l -v --checksum --resync --resync-mode=newer"
+# rclone_cmd="rclone bisync -l -v --resync --resync-mode=newer --dry-run"
+# rclone_cmd="rclone bisync -l -v --resync --resync-mode=newer"
+rclone_cmd="rclone bisync -l -v"
 # --protondrive-replace-existing-draft=true
 
 if [[ "$WORK" == "true" || "$ALL" == "true" ]]; then
@@ -56,14 +61,15 @@ if [[ "$PERSONAL" == "true" || "$ALL" == "true" ]]; then
     $rclone_cmd $HOME/Pictures/Memories/2018 protondrive_remote:sync/Pictures/Memories/2018
     $rclone_cmd $HOME/Pictures/Memories/2019 protondrive_remote:sync/Pictures/Memories/2019
     $rclone_cmd $HOME/Pictures/Memories/2020 protondrive_remote:sync/Pictures/Memories/2020
-    $rclone_cmd $HOME/Pictures/Memories/2021 protondrive_remote:sync/Pictures/Memories/2021
-    # $rclone_cmd $HOME/Pictures/Memories/2022 protondrive_remote:sync/Pictures/Memories/2022 # does not exist...
+    # $rclone_cmd $HOME/Pictures/Memories/2021 protondrive_remote:sync/Pictures/Memories/2021 # does not exist...
+    $rclone_cmd $HOME/Pictures/Memories/2022 protondrive_remote:sync/Pictures/Memories/2022
     $rclone_cmd $HOME/Pictures/Memories/2023 protondrive_remote:sync/Pictures/Memories/2023
   fi
 
   $rclone_cmd $HOME/Pictures/Memories/2024 protondrive_remote:sync/Pictures/Memories/2024
   $rclone_cmd $HOME/Pictures/Memories/2025 protondrive_remote:sync/Pictures/Memories/2025
 
-  $rclone_cmd $HOME/Documents/important protondrive_remote:sync/Documents/important --exclude=important/recovery
+  $rclone_cmd $HOME/Documents/important protondrive_remote:sync/Documents/important \
+    --exclude=**/recovery/** --exclude=recovery/**
   $rclone_cmd $HOME/.ao3statscraper protondrive_remote:sync/.ao3statscraper --exclude=ao3statscraper.conf.pkl --exclude=ao3statscraper.conf.yml
 fi
