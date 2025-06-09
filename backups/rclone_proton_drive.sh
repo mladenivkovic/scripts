@@ -137,12 +137,11 @@ if [[ "$PULL" == "true" && "$SYNC" == "true" ]]; then
   echo "Error: Can't select several directions. Pick either --pull or --sync."
   exit 1
 fi
-if [[ "$PULL" == "false" && "$SYNC" == "false" && "$PULL" == "false" ]]; then
+if [[ "$PUSH" == "false" && "$PULL" == "false" && "$SYNC" == "false" ]]; then
   echo "Error: You must select a direction. Set --push, --pull, or --sync flag."
   exit 1
 fi
 
-exit
 
 # Check for hostname.
 # --------------------
@@ -168,58 +167,96 @@ case $HOST in
 esac
 
 
-# Select correct base command.
-rclone_base_cmd=""
-if [[ "$PUSH" == "true" ]]; then
-  echo "NOT IMPLEMENTED YET"
-  exit 1
+
+
+function rclone_cmd() {
+  # -----------------------------------------
+  # Use the correct rclone command.
+  # Usage:
+  #   rclone_cmd <src> <dest> [extra flags]
+  # -----------------------------------------
+
+
+  if [[ $# < 2 ]]; then
+    echo "Wrong usage: You need to provide source and destination paths."
+    exit
+  fi
+
+  SRC="$1"
+  DEST="$2"
+  shift
+  shift
+  EXTRA_PASSED_FLAGS=""
+
+  while [[ $# > 0 ]]; do
+    EXTRA_PASSED_FLAGS="$EXTRA_PASSED_FLAGS"" $1"
+    shift
+  done
+
+
+  # Select correct base command.
   rclone_base_cmd=""
-elif [[ "$PULL" == "true"]]; then
-  echo "NOT IMPLEMENTED YET"
-  exit 1
-  rclone_base_cmd=""
-elif [[ "$SYNC" == "true" ]]; then
-  rclone_base_cmd="rclone bisync"
-else
-  echo "How did we get here?"
-  exit 1
-fi
+  if [[ "$PUSH" == "true" ]]; then
+    rclone_base_cmd="rclone copy"' '"$SRC"' '"$DEST"
+  elif [[ "$PULL" == "true" ]]; then
+    # SRC and DEST are switched on purpose here.
+    rclone_base_cmd="rclone sync"' '"$DEST"' '"$SRC"
+  elif [[ "$SYNC" == "true" ]]; then
+
+    # https://blog.otterlord.dev/posts/proton-drive-rclone/
+    # https://rclone.org/
+    # https://rclone.org/bisync/
+
+    # To be on the safe side, make directories in proton drive manually first
+    # via browser You should be able to run `rclone mkdir protondrive_remote:dirname`
+    # too.
+
+    # If running for the first time, run with --resync:
+    #   It is your first bisync run (between these two paths)
+    #   You've just made changes to your bisync settings (such as editing the
+    #   contents of your --filters-file) There was an error on the prior run,
+    #   and as a result, bisync now requires --resync to recover
+
+    rclone_base_cmd="rclone bisync"' '"$SRC"' '"$DEST"
+  else
+    echo "How did we get here?"
+    exit 1
+  fi
+
+  EXTRA_FLAGS=""
+  EXTRA_FLAGS="$EXTRA_FLAGS"" -l -v"
+  # EXTRA_FLAGS="$EXTRA_FLAGS"" --force"
+  # EXTRA_FLAGS="$EXTRA_FLAGS"" --resync --resync-mode=newer"
+  # EXTRA_FLAGS="$EXTRA_FLAGS"" --dry-run"
+  # EXTRA_FLAGS="$EXTRA_FLAGS"" --protondrive-replace-existing-draft=true"
+
+  rclone_full_cmd="$rclone_base_cmd"' '"$EXTRA_FLAGS"' '"$EXTRA_PASSED_FLAGS"
+
+  $rclone_full_cmd
+}
 
 
 
-# https://blog.otterlord.dev/posts/proton-drive-rclone/
-# https://rclone.org/
-# https://rclone.org/bisync/
-
-# To be on the safe side, make directories in proton drive manually first via browser
-# You should be able to run `rclone mkdir protondrive_remote:dirname` too.
-
-# If running for the first time, run with --resync:
-#   It is your first bisync run (between these two paths)
-#   You've just made changes to your bisync settings (such as editing the contents of your --filters-file)
-#   There was an error on the prior run, and as a result, bisync now requires --resync to recover
-
-
-# rclone_cmd="rclone sync -l -v"
-# rclone_cmd="rclone bisync -l -v --resync --resync-mode=newer --dry-run"
-# rclone_cmd="rclone bisync -l -v --resync --resync-mode=newer"
-rclone_cmd="rclone bisync -l -v"
-# --protondrive-replace-existing-draft=true
+# --------------------------
+# Do the actual work
+# --------------------------
 
 if [[ "$WORK" == "true" || "$ALL" == "true" ]]; then
-  $rclone_cmd $HOME/Work protondrive_remote:sync/Work
-  $rclone_cmd $HOME/Zotero protondrive_remote:sync/Zotero
-  $rclone_cmd $HOME/calibre_library protondrive_remote:sync/calibre_library
+  rclone_cmd $HOME/Work protondrive_remote:sync/Work
+  rclone_cmd $HOME/Zotero protondrive_remote:sync/Zotero
+  rclone_cmd $HOME/calibre_library protondrive_remote:sync/calibre_library
 else
+
   # See if we're syncing specific dirs then
+
   if [[ "$WORKDOCS" == "true" ]]; then
-    $rclone_cmd $HOME/Work protondrive_remote:sync/Work
+    rclone_cmd $HOME/Work protondrive_remote:sync/Work
   fi
   if [[ "$ZOTERO" == "true" ]]; then
-    $rclone_cmd $HOME/Zotero protondrive_remote:sync/Zotero
+    rclone_cmd $HOME/Zotero protondrive_remote:sync/Zotero
   fi
   if [[ "$CALIBRE" == "true" ]]; then
-    $rclone_cmd $HOME/calibre_library protondrive_remote:sync/calibre_library
+    rclone_cmd $HOME/calibre_library protondrive_remote:sync/calibre_library
   fi
 fi
 
@@ -227,47 +264,50 @@ fi
 if [[ "$PERSONAL" == "true" || "$ALL" == "true" ]]; then
 
   if [[ "$DO_LENOVO_THINKPAD" == "true" ]]; then
-    $rclone_cmd $HOME/Pictures/Memories/videos protondrive_remote:sync/Pictures/Memories/videos
-    $rclone_cmd $HOME/Pictures/Memories/childhood protondrive_remote:sync/Pictures/Memories/childhood
-    $rclone_cmd $HOME/Pictures/Memories/Pre-2018 protondrive_remote:sync/Pictures/Memories/Pre-2018
-    $rclone_cmd $HOME/Pictures/Memories/2018 protondrive_remote:sync/Pictures/Memories/2018
-    $rclone_cmd $HOME/Pictures/Memories/2019 protondrive_remote:sync/Pictures/Memories/2019
-    $rclone_cmd $HOME/Pictures/Memories/2020 protondrive_remote:sync/Pictures/Memories/2020
-    # $rclone_cmd $HOME/Pictures/Memories/2021 protondrive_remote:sync/Pictures/Memories/2021 # does not exist...
-    $rclone_cmd $HOME/Pictures/Memories/2022 protondrive_remote:sync/Pictures/Memories/2022
-    $rclone_cmd $HOME/Pictures/Memories/2023 protondrive_remote:sync/Pictures/Memories/2023
+    rclone_cmd $HOME/Pictures/Memories/videos protondrive_remote:sync/Pictures/Memories/videos
+    rclone_cmd $HOME/Pictures/Memories/childhood protondrive_remote:sync/Pictures/Memories/childhood
+    rclone_cmd $HOME/Pictures/Memories/Pre-2018 protondrive_remote:sync/Pictures/Memories/Pre-2018
+    rclone_cmd $HOME/Pictures/Memories/2018 protondrive_remote:sync/Pictures/Memories/2018
+    rclone_cmd $HOME/Pictures/Memories/2019 protondrive_remote:sync/Pictures/Memories/2019
+    rclone_cmd $HOME/Pictures/Memories/2020 protondrive_remote:sync/Pictures/Memories/2020
+    # rclone_cmd $HOME/Pictures/Memories/2021 protondrive_remote:sync/Pictures/Memories/2021 # does not exist...
+    rclone_cmd $HOME/Pictures/Memories/2022 protondrive_remote:sync/Pictures/Memories/2022
+    rclone_cmd $HOME/Pictures/Memories/2023 protondrive_remote:sync/Pictures/Memories/2023
   fi
 
-  $rclone_cmd $HOME/Pictures/Memories/2024 protondrive_remote:sync/Pictures/Memories/2024
-  $rclone_cmd $HOME/Pictures/Memories/2025 protondrive_remote:sync/Pictures/Memories/2025
+  rclone_cmd $HOME/Pictures/Memories/2024 protondrive_remote:sync/Pictures/Memories/2024
+  rclone_cmd $HOME/Pictures/Memories/2025 protondrive_remote:sync/Pictures/Memories/2025
 
-  $rclone_cmd $HOME/Documents/important protondrive_remote:sync/Documents/important --exclude=**/recovery/** --exclude=recovery/**
-  $rclone_cmd $HOME/.ao3statscraper protondrive_remote:sync/.ao3statscraper --exclude=ao3statscraper.conf.pkl --exclude=ao3statscraper.conf.yml
+  rclone_cmd $HOME/Documents/important protondrive_remote:sync/Documents/important --exclude=**/recovery/** --exclude=recovery/**
+  rclone_cmd $HOME/.ao3statscraper protondrive_remote:sync/.ao3statscraper --exclude=ao3statscraper.conf.pkl --exclude=ao3statscraper.conf.yml
+
 else
+
+  # See if we're syncing specific dirs then
 
   if [[ "$PICTURES" == "true" ]]; then
     if [[ "$DO_LENOVO_THINKPAD" == "true" ]]; then
-      $rclone_cmd $HOME/Pictures/Memories/videos protondrive_remote:sync/Pictures/Memories/videos
-      $rclone_cmd $HOME/Pictures/Memories/childhood protondrive_remote:sync/Pictures/Memories/childhood
-      $rclone_cmd $HOME/Pictures/Memories/Pre-2018 protondrive_remote:sync/Pictures/Memories/Pre-2018
-      $rclone_cmd $HOME/Pictures/Memories/2018 protondrive_remote:sync/Pictures/Memories/2018
-      $rclone_cmd $HOME/Pictures/Memories/2019 protondrive_remote:sync/Pictures/Memories/2019
-      $rclone_cmd $HOME/Pictures/Memories/2020 protondrive_remote:sync/Pictures/Memories/2020
-      # $rclone_cmd $HOME/Pictures/Memories/2021 protondrive_remote:sync/Pictures/Memories/2021 # does not exist...
-      $rclone_cmd $HOME/Pictures/Memories/2022 protondrive_remote:sync/Pictures/Memories/2022
-      $rclone_cmd $HOME/Pictures/Memories/2023 protondrive_remote:sync/Pictures/Memories/2023
+      rclone_cmd $HOME/Pictures/Memories/videos protondrive_remote:sync/Pictures/Memories/videos
+      rclone_cmd $HOME/Pictures/Memories/childhood protondrive_remote:sync/Pictures/Memories/childhood
+      rclone_cmd $HOME/Pictures/Memories/Pre-2018 protondrive_remote:sync/Pictures/Memories/Pre-2018
+      rclone_cmd $HOME/Pictures/Memories/2018 protondrive_remote:sync/Pictures/Memories/2018
+      rclone_cmd $HOME/Pictures/Memories/2019 protondrive_remote:sync/Pictures/Memories/2019
+      rclone_cmd $HOME/Pictures/Memories/2020 protondrive_remote:sync/Pictures/Memories/2020
+      # rclone_cmd $HOME/Pictures/Memories/2021 protondrive_remote:sync/Pictures/Memories/2021 # does not exist...
+      rclone_cmd $HOME/Pictures/Memories/2022 protondrive_remote:sync/Pictures/Memories/2022
+      rclone_cmd $HOME/Pictures/Memories/2023 protondrive_remote:sync/Pictures/Memories/2023
     fi
 
-    $rclone_cmd $HOME/Pictures/Memories/2024 protondrive_remote:sync/Pictures/Memories/2024
-    $rclone_cmd $HOME/Pictures/Memories/2025 protondrive_remote:sync/Pictures/Memories/2025
+    rclone_cmd $HOME/Pictures/Memories/2024 protondrive_remote:sync/Pictures/Memories/2024
+    rclone_cmd $HOME/Pictures/Memories/2025 protondrive_remote:sync/Pictures/Memories/2025
   fi
 
   if [[ "$PERSONAL_DOCS" == "true" ]]; then
-    $rclone_cmd $HOME/Documents/important protondrive_remote:sync/Documents/important --exclude=**/recovery/** --exclude=recovery/**
+    rclone_cmd $HOME/Documents/important protondrive_remote:sync/Documents/important --exclude=**/recovery/** --exclude=recovery/**
   fi
 
   if [[ "$AO3" == "true" ]]; then
-    $rclone_cmd $HOME/.ao3statscraper protondrive_remote:sync/.ao3statscraper --exclude=ao3statscraper.conf.pkl --exclude=ao3statscraper.conf.yml
+    rclone_cmd $HOME/.ao3statscraper protondrive_remote:sync/.ao3statscraper --exclude=ao3statscraper.conf.pkl --exclude=ao3statscraper.conf.yml
   fi
 
 fi
