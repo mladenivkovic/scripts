@@ -25,6 +25,9 @@ Usage:
   --zotero            Sync zotero dir
   --calibre           Sync calibre dir
 
+  --work-archive      Sync work archive dirs (not included in -w, -a, -p flags)
+  --mail-archive      Sync mail archive dirs (not included in -w, -a, -p flags)
+
   -h, --help          Print help and exit.
 '
 
@@ -42,6 +45,8 @@ AO3="false"
 WORKDOCS="false"
 ZOTERO="false"
 CALIBRE="false"
+WORK_ARCHIVE="false"
+MAIL_ARCHIVE="false"
 
 
 
@@ -104,6 +109,14 @@ else
 
     --calibre)
       CALIBRE="true"
+    ;;
+
+    --work-archive)
+      WORK_ARCHIVE="true"
+    ;;
+
+    --mail-archive)
+      MAIL_ARCHIVE="true"
     ;;
 
     -h | --help)
@@ -279,6 +292,10 @@ if [[ "$PERSONAL" == "true" || "$ALL" == "true" ]]; then
   rclone_cmd $HOME/Pictures/Memories/2025 protondrive_remote:sync/Pictures/Memories/2025
 
   rclone_cmd $HOME/Documents/important protondrive_remote:sync/Documents/important --exclude=**/recovery/** --exclude=recovery/**
+  if [[ "$DO_LENOVO_THINKPAD" == "true" ]]; then
+    rclone_cmd $HOME/Documents/creative protondrive_remote:sync/Documents/creative
+  fi
+
   rclone_cmd $HOME/.ao3statscraper protondrive_remote:sync/.ao3statscraper --exclude=ao3statscraper.conf.pkl --exclude=ao3statscraper.conf.yml
 
 else
@@ -311,3 +328,41 @@ else
   fi
 
 fi
+
+
+
+if [[ "$WORK_ARCHIVE" == "true" ]]; then
+
+  if [[ "$DO_HP_PROBOOK" == "true" ]]; then
+    echo "Are you sure you're on the right machine???"
+    exit
+  fi
+
+  if [[ "$SYNC" == "true" ]]; then
+    echo "Are you sure you want to bi-sync?"
+    exit
+  fi
+
+  rclone_cmd $HOME/Documents/archive_docs protondrive_remote:archive_docs
+
+fi
+
+
+if [[ "$MAIL_ARCHIVE" == "true" ]]; then
+
+  if [[ "$DO_HP_PROBOOK" == "true" ]]; then
+    echo "Are you sure you're on the right machine???"
+    exit
+  fi
+
+  if [[ "$SYNC" == "true" ]]; then
+    echo "Are you sure you want to bi-sync?"
+    exit
+  fi
+
+  rclone_cmd $HOME/Documents/archive_mail protondrive_remote:archive_mail
+
+fi
+
+
+
