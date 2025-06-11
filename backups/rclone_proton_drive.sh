@@ -36,6 +36,8 @@ Usage:
   rclone flags:
 
     --resync            Pass the --resync flag to rclone. Only works for --sync direction
+    --force             Pass the --force flag to rclone. Only for bisync direction
+    --dry-run           Pass the --force flag to rclone. Only for bisync direction
 
   Additional flags:
 
@@ -62,6 +64,8 @@ WORK_ARCHIVE="false"
 MAIL_ARCHIVE="false"
 DOCS_ARCHIVE="false"
 RESYNC="false"
+FORCE="false"
+DRYRUN="false"
 
 
 
@@ -150,6 +154,14 @@ else
       RESYNC="true"
     ;;
 
+    --force)
+      FORCE="true"
+    ;;
+
+    --dry-run)
+      DRYRUN="true"
+    ;;
+
     -h | --help)
       echo "$ERRMSG"
       exit
@@ -225,6 +237,11 @@ fi
 if [[ "$SYNC" != "true" && "$RESYNC" == "true" ]]; then
   echo "--resync flag is only valid for bisync mode (-b/--sync direction), ignoring it."
   RESYNC="false"
+fi
+
+if [[ "$SYNC" != "true" && "$FORCE" == "true" ]]; then
+  echo "--force flag is only valid for bisync mode (-b/--sync direction), ignoring it."
+  FORCE="false"
 fi
 
 
@@ -316,15 +333,20 @@ function rclone_cmd() {
 
   EXTRA_FLAGS=""
   EXTRA_FLAGS="$EXTRA_FLAGS"" -l -v"
-  EXTRA_FLAGS="$EXTRA_FLAGS"" --force"
-  #
+  EXTRA_FLAGS="$EXTRA_FLAGS"" --protondrive-replace-existing-draft=true"
+
+  if [[ "$FORCE" == "true" ]]; then
+    EXTRA_FLAGS="$EXTRA_FLAGS"" --force"
+  fi
+
   if [[ "$RESYNC" == "true" ]]; then
     EXTRA_FLAGS="$EXTRA_FLAGS"" --resync"
     # EXTRA_FLAGS="$EXTRA_FLAGS"" --resync-mode=newer"
   fi
 
-  EXTRA_FLAGS="$EXTRA_FLAGS"" --protondrive-replace-existing-draft=true"
-  # EXTRA_FLAGS="$EXTRA_FLAGS"" --dry-run"
+  if [[ "$DRYRUN" == "true" ]]; then
+    EXTRA_FLAGS="$EXTRA_FLAGS"" --dry-run"
+  fi
 
   rclone_full_cmd="$rclone_base_cmd"' '"$EXTRA_FLAGS"' '"$EXTRA_PASSED_FLAGS"
 
