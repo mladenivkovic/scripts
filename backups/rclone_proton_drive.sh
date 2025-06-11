@@ -9,8 +9,10 @@ Usage:
 
  direction:
 
-  -u, --up --push     Push local changes to drive
-  -d, --down, --pull  Pull changes from drive to local machine
+ -u, --up --push     Push local changes to drive (copy, not sync)
+ -d, --down, --pull  Pull changes from drive to local machine (copy, not sync)
+  --pushsync          Push local changes to drive via sync (overwrite drive state with local state)
+  --pullsync          Pull changes from drive via sync (overwrite local state with drive)
   -b, --sync          Sync bi-directionally
 
  options:
@@ -42,7 +44,9 @@ Usage:
 
 
 PUSH="false"
+PUSHSYNC="false"
 PULL="false"
+PULLSYNC="false"
 SYNC="false"
 
 ALL="false"
@@ -80,6 +84,14 @@ else
 
     -d | --down | --pull)
       PULL="true"
+    ;;
+
+    --pullsync)
+      PULLSYNC="true"
+    ;;
+
+    --pushsync)
+      PUSHSYNC="true"
     ;;
 
     -b | --sync)
@@ -161,18 +173,54 @@ if [[ "$PUSH" == "true" && "$PULL" == "true" ]]; then
   echo "Error: Can't select several directions. Pick either --push or --pull."
   exit 1
 fi
+if [[ "$PUSH" == "true" && "$PUSHSYNC" == "true" ]]; then
+  echo "Error: Can't select several directions. Pick either --push or --pushsync."
+  exit 1
+fi
+if [[ "$PUSH" == "true" && "$PULLSYNC" == "true" ]]; then
+  echo "Error: Can't select several directions. Pick either --push or --pullsync."
+  exit 1
+fi
 if [[ "$PUSH" == "true" && "$SYNC" == "true" ]]; then
   echo "Error: Can't select several directions. Pick either --push or --sync."
+  exit 1
+fi
+
+if [[ "$PULL" == "true" && "$PUSHSYNC" == "true" ]]; then
+  echo "Error: Can't select several directions. Pick either --pull or --pushsync."
+  exit 1
+fi
+if [[ "$PULL" == "true" && "$PULLSYNC" == "true" ]]; then
+  echo "Error: Can't select several directions. Pick either --pull or --pullsync."
   exit 1
 fi
 if [[ "$PULL" == "true" && "$SYNC" == "true" ]]; then
   echo "Error: Can't select several directions. Pick either --pull or --sync."
   exit 1
 fi
-if [[ "$PUSH" == "false" && "$PULL" == "false" && "$SYNC" == "false" ]]; then
-  echo "Error: You must select a direction. Set --push, --pull, or --sync flag."
+
+if [[ "$PULLSYNC" == "true" && "$PUSHSYNC" == "true" ]]; then
+  echo "Error: Can't select several directions. Pick either --pullsync or --pushsync."
   exit 1
 fi
+
+if [[ "$PULLSYNC" == "true" && "$SYNC" == "true" ]]; then
+  echo "Error: Can't select several directions. Pick either --pullsync or --sync."
+  exit 1
+fi
+
+if [[ "$PUSHSYNC" == "true" && "$SYNC" == "true" ]]; then
+  echo "Error: Can't select several directions. Pick either --pushsync or --sync."
+  exit 1
+fi
+
+
+
+if [[ "$PUSH" == "false" && "$PULL" == "false" && "$SYNC" == "false" && "$PUSHSYNC" == "false" && "$PULLSYNC" == "false" ]]; then
+  echo "Error: You must select a direction. Set --push, --pull, --pushsync, --pullsync, or --sync flag."
+  exit 1
+fi
+
 
 if [[ "$SYNC" != "true" && "$RESYNC" == "true" ]]; then
   echo "--resync flag is only valid for bisync mode (-b/--sync direction), ignoring it."
@@ -238,6 +286,11 @@ function rclone_cmd() {
     rclone_base_cmd="rclone copy"' '"$SRC"' '"$DEST"
   elif [[ "$PULL" == "true" ]]; then
     # SRC and DEST are switched on purpose here.
+    rclone_base_cmd="rclone copy"' '"$DEST"' '"$SRC"
+  elif [[ "$PUSHSYNC" == "true" ]]; then
+    rclone_base_cmd="rclone sync"' '"$SRC"' '"$DEST"
+  elif [[ "$PULLSYNC" == "true" ]]; then
+    # SRC and DEST are switched on purpose here.
     rclone_base_cmd="rclone sync"' '"$DEST"' '"$SRC"
   elif [[ "$SYNC" == "true" ]]; then
 
@@ -263,11 +316,13 @@ function rclone_cmd() {
 
   EXTRA_FLAGS=""
   EXTRA_FLAGS="$EXTRA_FLAGS"" -l -v"
-  # EXTRA_FLAGS="$EXTRA_FLAGS"" --force"
+  EXTRA_FLAGS="$EXTRA_FLAGS"" --force"
+  #
   if [[ "$RESYNC" == "true" ]]; then
     EXTRA_FLAGS="$EXTRA_FLAGS"" --resync"
     # EXTRA_FLAGS="$EXTRA_FLAGS"" --resync-mode=newer"
   fi
+
   EXTRA_FLAGS="$EXTRA_FLAGS"" --protondrive-replace-existing-draft=true"
   # EXTRA_FLAGS="$EXTRA_FLAGS"" --dry-run"
 
