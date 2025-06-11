@@ -43,3 +43,7 @@ done
 
 
 
+# Check for python artefacts
+find . -name "__pycache__" -exec rm -rfv {} \;
+find . -name "*.pyc" -exec rm -rfv {} \;
+
