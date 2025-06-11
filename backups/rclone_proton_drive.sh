@@ -247,9 +247,13 @@ function rclone_cmd() {
   # EXTRA_FLAGS="$EXTRA_FLAGS"" --force"
   # EXTRA_FLAGS="$EXTRA_FLAGS"" --resync --resync-mode=newer"
   # EXTRA_FLAGS="$EXTRA_FLAGS"" --dry-run"
-  # EXTRA_FLAGS="$EXTRA_FLAGS"" --protondrive-replace-existing-draft=true"
+  EXTRA_FLAGS="$EXTRA_FLAGS"" --protondrive-replace-existing-draft=true"
 
   rclone_full_cmd="$rclone_base_cmd"' '"$EXTRA_FLAGS"' '"$EXTRA_PASSED_FLAGS"
+
+  echo "Running"
+  echo "   ""$rclone_full_cmd"
+  echo
 
   $rclone_full_cmd
 }
@@ -312,6 +316,8 @@ else
 
   if [[ "$PICTURES" == "true" ]]; then
     if [[ "$DO_LENOVO_THINKPAD" == "true" ]]; then
+      rclone_cmd $HOME/Pictures/profile_pics protondrive_remote:sync/Pictures/profile_pics
+
       rclone_cmd $HOME/Pictures/Memories/videos protondrive_remote:sync/Pictures/Memories/videos
       rclone_cmd $HOME/Pictures/Memories/childhood protondrive_remote:sync/Pictures/Memories/childhood
       rclone_cmd $HOME/Pictures/Memories/Pre-2018 protondrive_remote:sync/Pictures/Memories/Pre-2018
