@@ -15,21 +15,29 @@ Usage:
 
  options:
 
-  -a, --all           Sync all (hardcoded) dirs
-  -w, --work          Sync (all) work dirs
-  -p, --personal      Sync (all) private dirs
-  --docs              Sync private documents
-  --pics, --pictures  Sync pictures
-  --ao3               Sync ao3 stuff
-  --workdocs          Sync work documents
-  --zotero            Sync zotero dir
-  --calibre           Sync calibre dir
+  (selection of) directories to sync:
 
-  --docs-archive      Sync archive document dirs (not included in -w, -a, -p flags)
-  --work-archive      Sync work archive dirs (not included in -w, -a, -p flags)
-  --mail-archive      Sync mail archive dirs (not included in -w, -a, -p flags)
+    -a, --all           Sync all (hardcoded) dirs
+    -w, --work          Sync (all) work dirs
+    -p, --personal      Sync (all) private dirs
+    --docs              Sync private documents
+    --pics, --pictures  Sync pictures
+    --ao3               Sync ao3 stuff
+    --workdocs          Sync work documents
+    --zotero            Sync zotero dir
+    --calibre           Sync calibre dir
 
-  -h, --help          Print help and exit.
+    --docs-archive      Sync archive document dirs (not included in -w, -a, -p flags)
+    --work-archive      Sync work archive dirs (not included in -w, -a, -p flags)
+    --mail-archive      Sync mail archive dirs (not included in -w, -a, -p flags)
+
+  rclone flags:
+
+    --resync            Pass the --resync flag to rclone. Only works for --sync direction
+
+  Additional flags:
+
+    -h, --help          Print help and exit.
 '
 
 
@@ -49,6 +57,7 @@ CALIBRE="false"
 WORK_ARCHIVE="false"
 MAIL_ARCHIVE="false"
 DOCS_ARCHIVE="false"
+RESYNC="false"
 
 
 
@@ -125,6 +134,10 @@ else
       DOCS_ARCHIVE="true"
     ;;
 
+    --resync)
+      RESYNC="true"
+    ;;
+
     -h | --help)
       echo "$ERRMSG"
       exit
@@ -160,6 +173,12 @@ if [[ "$PUSH" == "false" && "$PULL" == "false" && "$SYNC" == "false" ]]; then
   echo "Error: You must select a direction. Set --push, --pull, or --sync flag."
   exit 1
 fi
+
+if [[ "$SYNC" != "true" && "$RESYNC" == "true" ]]; then
+  echo "--resync flag is only valid for bisync mode (-b/--sync direction), ignoring it."
+  RESYNC="false"
+fi
+
 
 
 # Check for hostname.
@@ -245,9 +264,12 @@ function rclone_cmd() {
   EXTRA_FLAGS=""
   EXTRA_FLAGS="$EXTRA_FLAGS"" -l -v"
   # EXTRA_FLAGS="$EXTRA_FLAGS"" --force"
-  # EXTRA_FLAGS="$EXTRA_FLAGS"" --resync --resync-mode=newer"
-  # EXTRA_FLAGS="$EXTRA_FLAGS"" --dry-run"
+  if [[ "$RESYNC" == "true" ]]; then
+    EXTRA_FLAGS="$EXTRA_FLAGS"" --resync"
+    # EXTRA_FLAGS="$EXTRA_FLAGS"" --resync-mode=newer"
+  fi
   EXTRA_FLAGS="$EXTRA_FLAGS"" --protondrive-replace-existing-draft=true"
+  # EXTRA_FLAGS="$EXTRA_FLAGS"" --dry-run"
 
   rclone_full_cmd="$rclone_base_cmd"' '"$EXTRA_FLAGS"' '"$EXTRA_PASSED_FLAGS"
 
