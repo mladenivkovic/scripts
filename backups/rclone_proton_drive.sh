@@ -1,7 +1,19 @@
 #!/bin/bash
 
+# as set up with `rclone config`
+PROTON_DRIVE_REMOTE_NAME=protondrive_remote
+# root dir on proton remote where to place syncs
+REMOTE_SYNC_ROOT_DIR=sync
+# root dir on proton remote where to place archives
+REMOTE_ARCHIVE_ROOT_DIR=archive
+# backup directory on remote for syncing process
+REMOTE_SYNC_BACKUP_DIR=sync_backup
+# backup directory on remote for syncing process
+REMOTE_ARCHIVE_BACKUP_DIR=archive_backup
+
+
 ERRMSG='
-rclone_proton_drive.sh -  sync local dirs with Proton Drive.
+rclone_proton_drive.sh - sync local dirs with Proton Drive.
 
 Usage:
 
@@ -291,6 +303,7 @@ function rclone_cmd() {
   shift
   EXTRA_PASSED_FLAGS=""
 
+  # Grab additional flags passed when calling this function
   while [[ $# > 0 ]]; do
     EXTRA_PASSED_FLAGS="$EXTRA_PASSED_FLAGS"" $1"
     shift
@@ -316,7 +329,7 @@ function rclone_cmd() {
     # https://rclone.org/bisync/
 
     # To be on the safe side, make directories in proton drive manually first
-    # via browser You should be able to run `rclone mkdir protondrive_remote:dirname`
+    # via browser You should be able to run `rclone mkdir "$PROTON_DRIVE_REMOTE_NAME":dirname`
     # too.
 
     # If running for the first time, run with --resync:
@@ -331,9 +344,38 @@ function rclone_cmd() {
     exit 1
   fi
 
+  # determine backup dir on the drive.
+  REMOTE_BACKUP_DIR="none"
+  PREFIX="$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"
+  if [[ "$SRC" == "$PREFIX"* ]]; then
+    REMOTE_BACKUP_DIR="$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_BACKUP_DIR""${SRC#$PREFIX}"
+    echo check1 $REMOTE_BACKUP_DIR
+  elif [[ "$DEST" == "$PREFIX"* ]]; then
+    REMOTE_BACKUP_DIR="$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_BACKUP_DIR""${DEST#$PREFIX}"
+    echo check2 $REMOTE_BACKUP_DIR ${DEST#$PREFIX}
+  fi
+  PREFIX="$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_ARCHIVE_ROOT_DIR"
+  if [[ "$SRC" == "$PREFIX"* ]]; then
+    REMOTE_BACKUP_DIR="$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_ARCHIVE_BACKUP_DIR""${SRC#$PREFIX}"
+  elif [[ "$DEST" == "$PREFIX"* ]]; then
+    REMOTE_BACKUP_DIR="$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_ARCHIVE_BACKUP_DIR""${DEST#$PREFIX}"
+  fi
+
+  if [[ "$REMOTE_BACKUP_DIR" == "none" ]]; then
+    echo "Something went wrong when determining remote backup dir."
+    echo "SRC:" $SRC
+    echo "DEST:" $DEST
+    echo "PROTON_DRIVE_REMOTE_NAME": $PROTON_DRIVE_REMOTE_NAME
+    echo "REMOTE_SYNC_ROOT_DIR": $REMOTE_SYNC_ROOT_DIR
+    echo "REMOTE_ARCHIVE_ROOT_DIR": $REMOTE_ARCHIVE_ROOT_DIR
+    exit 1
+  fi
+
+
   EXTRA_FLAGS=""
   EXTRA_FLAGS="$EXTRA_FLAGS"" -l -v"
   EXTRA_FLAGS="$EXTRA_FLAGS"" --protondrive-replace-existing-draft=true"
+  EXTRA_FLAGS="$EXTRA_FLAGS"" --backup-dir ""$REMOTE_BACKUP_DIR"
 
   if [[ "$FORCE" == "true" ]]; then
     EXTRA_FLAGS="$EXTRA_FLAGS"" --force"
@@ -364,21 +406,21 @@ function rclone_cmd() {
 # --------------------------
 
 if [[ "$WORK" == "true" || "$ALL" == "true" ]]; then
-  rclone_cmd $HOME/Work protondrive_remote:sync/Work
-  rclone_cmd $HOME/Zotero protondrive_remote:sync/Zotero
-  rclone_cmd $HOME/calibre_library protondrive_remote:sync/calibre_library
+  rclone_cmd $HOME/Work "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Work
+  rclone_cmd $HOME/Zotero "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Zotero
+  rclone_cmd $HOME/calibre_library "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/calibre_library
 else
 
   # See if we're syncing specific dirs then
 
   if [[ "$WORKDOCS" == "true" ]]; then
-    rclone_cmd $HOME/Work protondrive_remote:sync/Work
+    rclone_cmd $HOME/Work "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Work
   fi
   if [[ "$ZOTERO" == "true" ]]; then
-    rclone_cmd $HOME/Zotero protondrive_remote:sync/Zotero
+    rclone_cmd $HOME/Zotero "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Zotero
   fi
   if [[ "$CALIBRE" == "true" ]]; then
-    rclone_cmd $HOME/calibre_library protondrive_remote:sync/calibre_library
+    rclone_cmd $HOME/calibre_library "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/calibre_library
   fi
 fi
 
@@ -386,28 +428,28 @@ fi
 if [[ "$PERSONAL" == "true" || "$ALL" == "true" ]]; then
 
   if [[ "$DO_LENOVO_THINKPAD" == "true" ]]; then
-    rclone_cmd $HOME/Pictures/profile_pics protondrive_remote:sync/Pictures/profile_pics
+    rclone_cmd $HOME/Pictures/profile_pics "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/profile_pics
 
-    rclone_cmd $HOME/Pictures/Memories/videos protondrive_remote:sync/Pictures/Memories/videos
-    rclone_cmd $HOME/Pictures/Memories/childhood protondrive_remote:sync/Pictures/Memories/childhood
-    rclone_cmd $HOME/Pictures/Memories/Pre-2018 protondrive_remote:sync/Pictures/Memories/Pre-2018
-    rclone_cmd $HOME/Pictures/Memories/2018 protondrive_remote:sync/Pictures/Memories/2018
-    rclone_cmd $HOME/Pictures/Memories/2019 protondrive_remote:sync/Pictures/Memories/2019
-    rclone_cmd $HOME/Pictures/Memories/2020 protondrive_remote:sync/Pictures/Memories/2020
-    # rclone_cmd $HOME/Pictures/Memories/2021 protondrive_remote:sync/Pictures/Memories/2021 # does not exist...
-    rclone_cmd $HOME/Pictures/Memories/2022 protondrive_remote:sync/Pictures/Memories/2022
-    rclone_cmd $HOME/Pictures/Memories/2023 protondrive_remote:sync/Pictures/Memories/2023
+    rclone_cmd $HOME/Pictures/Memories/videos "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/videos
+    rclone_cmd $HOME/Pictures/Memories/childhood "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/childhood
+    rclone_cmd $HOME/Pictures/Memories/Pre-2018 "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/Pre-2018
+    rclone_cmd $HOME/Pictures/Memories/2018 "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2018
+    rclone_cmd $HOME/Pictures/Memories/2019 "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2019
+    rclone_cmd $HOME/Pictures/Memories/2020 "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2020
+    # rclone_cmd $HOME/Pictures/Memories/2021 "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2021 # does not exist...
+    rclone_cmd $HOME/Pictures/Memories/2022 "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2022
+    rclone_cmd $HOME/Pictures/Memories/2023 "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2023
   fi
 
-  rclone_cmd $HOME/Pictures/Memories/2024 protondrive_remote:sync/Pictures/Memories/2024
-  rclone_cmd $HOME/Pictures/Memories/2025 protondrive_remote:sync/Pictures/Memories/2025
+  rclone_cmd $HOME/Pictures/Memories/2024 "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2024
+  rclone_cmd $HOME/Pictures/Memories/2025 "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2025
 
-  rclone_cmd $HOME/Documents/important protondrive_remote:sync/Documents/important --exclude=**/recovery/** --exclude=recovery/**
+  rclone_cmd $HOME/Documents/important "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Documents/important --exclude=**/recovery/** --exclude=recovery/**
   if [[ "$DO_LENOVO_THINKPAD" == "true" ]]; then
-    rclone_cmd $HOME/Documents/creative protondrive_remote:sync/Documents/creative
+    rclone_cmd $HOME/Documents/creative "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Documents/creative
   fi
 
-  rclone_cmd $HOME/.ao3statscraper protondrive_remote:sync/.ao3statscraper --exclude=ao3statscraper.conf.pkl --exclude=ao3statscraper.conf.yml
+  rclone_cmd $HOME/.ao3statscraper "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/.ao3statscraper --exclude=ao3statscraper.conf.pkl --exclude=ao3statscraper.conf.yml
 
 else
 
@@ -415,29 +457,29 @@ else
 
   if [[ "$PICTURES" == "true" ]]; then
     if [[ "$DO_LENOVO_THINKPAD" == "true" ]]; then
-      rclone_cmd $HOME/Pictures/profile_pics protondrive_remote:sync/Pictures/profile_pics
+      rclone_cmd $HOME/Pictures/profile_pics "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/profile_pics
 
-      rclone_cmd $HOME/Pictures/Memories/videos protondrive_remote:sync/Pictures/Memories/videos
-      rclone_cmd $HOME/Pictures/Memories/childhood protondrive_remote:sync/Pictures/Memories/childhood
-      rclone_cmd $HOME/Pictures/Memories/Pre-2018 protondrive_remote:sync/Pictures/Memories/Pre-2018
-      rclone_cmd $HOME/Pictures/Memories/2018 protondrive_remote:sync/Pictures/Memories/2018
-      rclone_cmd $HOME/Pictures/Memories/2019 protondrive_remote:sync/Pictures/Memories/2019
-      rclone_cmd $HOME/Pictures/Memories/2020 protondrive_remote:sync/Pictures/Memories/2020
-      # rclone_cmd $HOME/Pictures/Memories/2021 protondrive_remote:sync/Pictures/Memories/2021 # does not exist...
-      rclone_cmd $HOME/Pictures/Memories/2022 protondrive_remote:sync/Pictures/Memories/2022
-      rclone_cmd $HOME/Pictures/Memories/2023 protondrive_remote:sync/Pictures/Memories/2023
+      rclone_cmd $HOME/Pictures/Memories/videos "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/videos
+      rclone_cmd $HOME/Pictures/Memories/childhood "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/childhood
+      rclone_cmd $HOME/Pictures/Memories/Pre-2018 "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/Pre-2018
+      rclone_cmd $HOME/Pictures/Memories/2018 "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2018
+      rclone_cmd $HOME/Pictures/Memories/2019 "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2019
+      rclone_cmd $HOME/Pictures/Memories/2020 "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2020
+      # rclone_cmd $HOME/Pictures/Memories/2021 "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2021 # does not exist...
+      rclone_cmd $HOME/Pictures/Memories/2022 "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2022
+      rclone_cmd $HOME/Pictures/Memories/2023 "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2023
     fi
 
-    rclone_cmd $HOME/Pictures/Memories/2024 protondrive_remote:sync/Pictures/Memories/2024
-    rclone_cmd $HOME/Pictures/Memories/2025 protondrive_remote:sync/Pictures/Memories/2025
+    rclone_cmd $HOME/Pictures/Memories/2024 "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2024
+    rclone_cmd $HOME/Pictures/Memories/2025 "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2025
   fi
 
   if [[ "$PERSONAL_DOCS" == "true" ]]; then
-    rclone_cmd $HOME/Documents/important protondrive_remote:sync/Documents/important --exclude=**/recovery/** --exclude=recovery/**
+    rclone_cmd $HOME/Documents/important "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Documents/important --exclude=**/recovery/** --exclude=recovery/**
   fi
 
   if [[ "$AO3" == "true" ]]; then
-    rclone_cmd $HOME/.ao3statscraper protondrive_remote:sync/.ao3statscraper --exclude=ao3statscraper.conf.pkl --exclude=ao3statscraper.conf.yml
+    rclone_cmd $HOME/.ao3statscraper "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/.ao3statscraper --exclude=ao3statscraper.conf.pkl --exclude=ao3statscraper.conf.yml
   fi
 
 fi
@@ -456,7 +498,7 @@ if [[ "$WORK_ARCHIVE" == "true" ]]; then
     exit
   fi
 
-  rclone_cmd $HOME/Documents/archive_work protondrive_remote:archive_work
+  rclone_cmd $HOME/Documents/archive_work "$PROTON_DRIVE_REMOTE_NAME":$REMOTE_ARCHIVE_ROOT_DIR/archive_work
 
 fi
 
@@ -474,7 +516,7 @@ if [[ "$DOCS_ARCHIVE" == "true" ]]; then
     exit
   fi
 
-  rclone_cmd $HOME/Documents/archive_docs protondrive_remote:archive_docs
+  rclone_cmd $HOME/Documents/archive_docs "$PROTON_DRIVE_REMOTE_NAME":$REMOTE_ARCHIVE_ROOT_DIR/archive_docs
 
 fi
 
@@ -492,7 +534,7 @@ if [[ "$MAIL_ARCHIVE" == "true" ]]; then
     exit
   fi
 
-  rclone_cmd $HOME/Documents/archive_mail protondrive_remote:archive_mail
+  rclone_cmd $HOME/Documents/archive_mail "$PROTON_DRIVE_REMOTE_NAME":$REMOTE_ARCHIVE_ROOT_DIR/archive_mail
 
 fi
 
