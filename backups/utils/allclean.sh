@@ -3,12 +3,12 @@
 # Search for generated/compiled files and clean them up.
 
 
-CWD=`pwd`
 
 texclean() {
+  CWD=`pwd`
   FILE=$1
   DIR=`dirname "$FILE"`
-  cd "$DIR"
+  cd "$CWD"/"$DIR"
   echo "=== TEX CLEAN $DIR"
   rm -fv *.aux *.bbl *.log *.out *.gz *.toc *.blg *.lot *.lof *.run.xml *.snm *.nav *-blx.bib
   cd "$CWD"
@@ -24,6 +24,7 @@ find . -name "*.tex" -exec bash -c 'texclean "$0"' {} \;
 
 
 # Check for makefiles
+CWD=`pwd`
 for MKFILE in `find . -name "Makefile"`; do
   MK_DIR=`dirname "$MKFILE"`
   cd "$MK_DIR"
@@ -46,4 +47,9 @@ done
 # Check for python artefacts
 find . -name "__pycache__" -exec rm -rfv {} \;
 find . -name "*.pyc" -exec rm -rfv {} \;
+
+
+# check for open office lock files
+find . -name ".~lock.*" -exec rm -rfv {} \;
+
 
