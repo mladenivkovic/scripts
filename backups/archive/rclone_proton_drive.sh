@@ -12,6 +12,9 @@ REMOTE_SYNC_BACKUP_DIR=sync_backup
 REMOTE_ARCHIVE_BACKUP_DIR=archive_backup
 
 
+echo "ERROR: THIS IS DEPRECATED. I DON'T KNOW WHETHER IT STILL WORKS."
+exit
+
 ERRMSG='
 rclone_proton_drive.sh - sync local dirs with Proton Drive.
 
