@@ -34,14 +34,15 @@ Usage:
 
   (selection of) directories to sync:
 
-    -a, --all           Sync all (hardcoded) dirs. Equivalent to --work --personal         [ NOTE: CURRENTLY DISABLED ]
-    -w, --work          Sync (all) work dirs. Equivalent to --workdocs --zotero --calibre  [ NOTE: CURRENTLY DISABLED ]
-    -p, --personal      Sync (all) private dirs. Equivalent to --docs --pics --ao3         [ NOTE: CURRENTLY DISABLED ]
+    -a, --all           Sync all (hardcoded) dirs. Equivalent to --work --personal                    [ NOTE: CURRENTLY DISABLED ]
+    -w, --work          Sync (all) work dirs. Equivalent to --workdocs --zotero --calibre --teaching  [ NOTE: CURRENTLY DISABLED ]
+    -p, --personal      Sync (all) private dirs. Equivalent to --docs --pics --ao3                    [ NOTE: CURRENTLY DISABLED ]
     -t, --testing       Directory to test sync: ~/tmp/testing_sync
     --docs              Sync private documents      [ NOTE: CURRENTLY DISABLED ]
     --pics, --pictures  Sync pictures               [ NOTE: CURRENTLY DISABLED ]
     --ao3               Sync ao3 stuff
-    --workdocs          Sync work documents         [ NOTE: CURRENTLY DISABLED ]
+    --workdocs          Sync work documents
+    --teaching          Sync Durham/teaching documents
     --zotero            Sync zotero dir             [ NOTE: CURRENTLY DISABLED ]
     --calibre           Sync calibre dir            [ NOTE: CURRENTLY DISABLED ]
 
@@ -75,6 +76,7 @@ PERSONAL_DOCS="false"
 PICTURES="false"
 AO3="false"
 WORKDOCS="false"
+TEACHING="false"
 ZOTERO="false"
 CALIBRE="false"
 WORK_ARCHIVE="false"
@@ -115,7 +117,7 @@ else
       PUSHSYNC="true"
     ;;
 
-    -b | --sync)
+    -b | --sync | --bisync )
       SYNC="true"
     ;;
 
@@ -149,6 +151,10 @@ else
 
     --workdocs)
       WORKDOCS="true"
+    ;;
+
+    --teaching)
+      TEACHING="true"
     ;;
 
     --zotero)
@@ -449,12 +455,16 @@ if [[ "$WORK" == "true" || "$ALL" == "true" ]]; then
   rclone_cmd $HOME/Work "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Work
   rclone_cmd $HOME/Zotero "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Zotero
   rclone_cmd $HOME/calibre_library "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/calibre_library
+  rclone_cmd $HOME/Durham/teaching "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Durham/teaching
 else
 
   # See if we're syncing specific dirs then
 
   if [[ "$WORKDOCS" == "true" ]]; then
     rclone_cmd $HOME/Work "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Work
+  fi
+  if [[ "$TEACHING" == "true" ]]; then
+    rclone_cmd $HOME/Durham/teaching "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Durham/teaching
   fi
   if [[ "$ZOTERO" == "true" ]]; then
     rclone_cmd $HOME/Zotero "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Zotero
