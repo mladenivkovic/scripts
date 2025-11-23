@@ -31,7 +31,7 @@ usage:
     dirflags: make (selection of) directories to sync:
 
     -a, --all                        Sync all (hardcoded) dirs
-    -w, --work                       Sync (all) work dirs
+    -w, --work                       Sync (all) work dirs. Equivalent to --workdocs --zotero --calibre
     -p, --personal                   Sync (all) private dirs
     --docs                           Sync private documents
     --pics, --pictures               Sync pictures
