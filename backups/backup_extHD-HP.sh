@@ -22,9 +22,9 @@ usage:
 
 
 
-ROOT_BACKUP_FROM_DIR=$HOME               # Root dir to backup
-DATE=`date +%F_%Hh%M`                    # current time
-BACKUP_TO_DIR=/home/mivkov/Encfs/BACKUP_HP/  # where to store the backup
+ROOT_BACKUP_SRC_DIR=$HOME                      # Root dir to backup
+DATE=`date +%F_%Hh%M`                          # current time
+BACKUP_DEST_DIR=/home/mivkov/Encfs/BACKUP_HP/  # where to store the backup
 HOMEDIR_BASENAME=`basename $HOME`
 
 
@@ -32,7 +32,7 @@ HOMEDIR_BASENAME=`basename $HOME`
 # --------------------
 
 MINIMAL="false"
-BACKUP_FROM_DIR="#none"
+BACKUP_SRC_DIR="#none"
 
 while [[ $# > 0 ]]; do
   ARG="$1"
@@ -48,9 +48,9 @@ while [[ $# > 0 ]]; do
     ;;
 
     *)
-      BACKUP_FROM_DIR=`realpath $ARG`
-      if [ ! -d "$BACKUP_FROM_DIR" ]; then
-        echo "Error: Didn't find directory " $BACKUP_FROM_DIR
+      BACKUP_SRC_DIR=`realpath $ARG`
+      if [ ! -d "$BACKUP_SRC_DIR" ]; then
+        echo "Error: Didn't find directory " $BACKUP_SRC_DIR
       fi
     ;;
 
@@ -61,23 +61,23 @@ done
 
 
 
-if [ ! -d "$BACKUP_TO_DIR"/$HOMEDIR_BASENAME ]; then
-  echo "Din't find target dir '"$BACKUP_TO_DIR/$HOMEDIR_BASENAME"', trying second option"
+if [ ! -d "$BACKUP_DEST_DIR"/$HOMEDIR_BASENAME ]; then
+  echo "Din't find target dir '"$BACKUP_DEST_DIR/$HOMEDIR_BASENAME"', trying second option"
 
   # try the second HDD
   found_dir="false"
-  BACKUP_TO_DIR=/home/mivkov/Encfs/BACKUP_HP_HOME/  # where to store the backup
-  if [ ! -d "$BACKUP_TO_DIR/$HOMEDIR_BASENAME" ]; then
-    echo "Din't find target dir '"$BACKUP_TO_DIR/$HOMEDIR_BASENAME"', trying third option"
+  BACKUP_DEST_DIR=/home/mivkov/Encfs/BACKUP_HP_HOME/  # where to store the backup
+  if [ ! -d "$BACKUP_DEST_DIR/$HOMEDIR_BASENAME" ]; then
+    echo "Din't find target dir '"$BACKUP_DEST_DIR/$HOMEDIR_BASENAME"', trying third option"
   else
     found_dir="true"
   fi
 
   if [[ "$found_dir" == "false" ]]; then
     # try the third HDD
-    BACKUP_TO_DIR=/home/mivkov/Encfs/BACKUP_HP_WORK/  # where to store the backup
-    if [ ! -d "$BACKUP_TO_DIR/$HOMEDIR_BASENAME" ]; then
-      echo "Din't find target dir '"$BACKUP_TO_DIR/$HOMEDIR_BASENAME"', trying fourth option"
+    BACKUP_DEST_DIR=/home/mivkov/Encfs/BACKUP_HP_WORK/  # where to store the backup
+    if [ ! -d "$BACKUP_DEST_DIR/$HOMEDIR_BASENAME" ]; then
+      echo "Din't find target dir '"$BACKUP_DEST_DIR/$HOMEDIR_BASENAME"', trying fourth option"
     else
       found_dir="true"
     fi
@@ -85,9 +85,9 @@ if [ ! -d "$BACKUP_TO_DIR"/$HOMEDIR_BASENAME ]; then
 
   if [[ "$found_dir" == "false" ]]; then
     # try the fourth HDD
-    BACKUP_TO_DIR=/home/mivkov/Encfs/BACKUP_HP_DAVOS/  # where to store the backup
-    if [ ! -d "$BACKUP_TO_DIR/$HOMEDIR_BASENAME" ]; then
-      echo "Din't find target dir '"$BACKUP_TO_DIR/$HOMEDIR_BASENAME"', exiting"
+    BACKUP_DEST_DIR=/home/mivkov/Encfs/BACKUP_HP_DAVOS/  # where to store the backup
+    if [ ! -d "$BACKUP_DEST_DIR/$HOMEDIR_BASENAME" ]; then
+      echo "Din't find target dir '"$BACKUP_DEST_DIR/$HOMEDIR_BASENAME"', exiting"
       echo "Did you remember to mount the encrypted drives?"
       exit 1
     fi
@@ -95,7 +95,7 @@ if [ ! -d "$BACKUP_TO_DIR"/$HOMEDIR_BASENAME ]; then
 
 fi
 
-echo Writing backup to $BACKUP_TO_DIR
+echo Writing backup to $BACKUP_DEST_DIR
 
 
 EXCLUDEDIRS="" # Define parent directories that are to be excluded here
@@ -135,7 +135,7 @@ for EX in $EXCLUDEFILES; do
 done
 
 
-# indended usage: $rsync_cmd "$BACKUP_FROM_DIR" "$BACKUP_TO_DIR"
+# indended usage: $rsync_cmd "$BACKUP_SRC_DIR" "$BACKUP_DEST_DIR"
 rsync_cmd=rsync
 rsync_cmd+=" --archive --verbose --human-readable --progress --stats"
 rsync_cmd+=" --update --recursive --delete --exclude=**/*tmp*/ --exclude=**/*cache*/"
@@ -155,50 +155,50 @@ rsync_cmd+=" ""$excludestr_rsync"
 
 
 # if we're doing only a single dir backup:
-if [[ "$BACKUP_FROM_DIR" != "#none" ]]; then
+if [[ "$BACKUP_SRC_DIR" != "#none" ]]; then
 
-  # first check that it's within ROOT_BACKUP_FROM_DIR
-  if [[ ! "$BACKUP_FROM_DIR" = "$ROOT_BACKUP_FROM_DIR"* ]]; then
-    echo "$BACKUP_FROM_DIR" is not in the root backup directory $ROOT_BACKUP_FROM_DIR
+  # first check that it's within ROOT_BACKUP_SRC_DIR
+  if [[ ! "$BACKUP_SRC_DIR" = "$ROOT_BACKUP_SRC_DIR"* ]]; then
+    echo "$BACKUP_SRC_DIR" is not in the root backup directory $ROOT_BACKUP_SRC_DIR
     exit 1
   fi
 
   # then check that it's not in an excluded dir
   for EX in $EXCLUDES; do
-    if [[ "$BACKUP_FROM_DIR" = "$EX"* ]]; then
-      echo "$BACKUP_FROM_DIR" is in an excluded backup directory: $EX
+    if [[ "$BACKUP_SRC_DIR" = "$EX"* ]]; then
+      echo "$BACKUP_SRC_DIR" is in an excluded backup directory: $EX
       exit 1
     fi
   done
 
-  # now add the additional path of the directory to BACKUP_TO_DIR
-  parent_root_dir="$(dirname $ROOT_BACKUP_FROM_DIR)"
-  parent_dir_to_backup="$(dirname $BACKUP_FROM_DIR)"
-  BACKUP_TO_DIR="$BACKUP_TO_DIR"/"${parent_dir_to_backup#$parent_root_dir}"
-  mkdir -p "$BACKUP_TO_DIR"
+  # now add the additional path of the directory to BACKUP_DEST_DIR
+  parent_root_dir="$(dirname $ROOT_BACKUP_SRC_DIR)"
+  parent_backup_src_dir="$(dirname $BACKUP_SRC_DIR)"
+  BACKUP_DEST_DIR="$BACKUP_DEST_DIR"/"${parent_backup_src_dir#$parent_root_dir}"
+  mkdir -p "$BACKUP_DEST_DIR"
   # example:
   #   initially:
-  #   BACKUP_TO_DIR = /media/mivkov/backup
-  #   BACKUP_FROM_DIR = /home/mivkov/xkcd/ksbd/ToG
+  #   BACKUP_DEST_DIR = /media/mivkov/backup
+  #   BACKUP_SRC_DIR = /home/mivkov/xkcd/ksbd/ToG
   #
   #   change into:
   #   parent_root_dir = /home
   #   parent_dir_to_backup = /home/mivkov/xkcd/ksbd
-  #   BACKUP_TO_DIR += /mivkov/xkcd
+  #   BACKUP_DEST_DIR += /mivkov/xkcd
 
-  echo "---Backing up single dir '$BACKUP_FROM_DIR'---"
-  $rsync_cmd "$BACKUP_FROM_DIR" "$BACKUP_TO_DIR"
+  echo "---Backing up single dir '$BACKUP_SRC_DIR'---"
+  $rsync_cmd "$BACKUP_SRC_DIR" "$BACKUP_DEST_DIR"
   echo "---Single dir backup ended---"
 
   exit
 fi
 
 
-MINIMAL_ROOT_DIRS=" $HOME/Documents "
-MINIMAL_ROOT_DIRS+=" $HOME/Durham "
-MINIMAL_ROOT_DIRS+=" $HOME/EPFL "
-MINIMAL_ROOT_DIRS+=" $HOME/Pictures "
-# MINIMAL_ROOT_DIRS+=" $HOME/Work "
+MINIMAL_ROOT_SOURCES=" $HOME/Documents "
+MINIMAL_ROOT_SOURCES+=" $HOME/Durham "
+MINIMAL_ROOT_SOURCES+=" $HOME/EPFL "
+MINIMAL_ROOT_SOURCES+=" $HOME/Pictures "
+# MINIMAL_ROOT_SOURCES+=" $HOME/Work "
 
 
 # if we're doing a "minimal" backup:
@@ -206,41 +206,41 @@ if [[ "$MINIMAL" = "true" ]]; then
 
   echo "---Starting minimal backup---"
 
-  for DIR in $MINIMAL_ROOT_DIRS; do
+  for DIR in $MINIMAL_SOURCES; do
 
-    BACKUP_FROM_DIR=`realpath $DIR`
+    BACKUP_SRC_DIR=`realpath $DIR`
 
-    # first check that it's within ROOT_BACKUP_FROM_DIR
-    if [[ ! "$DIR" = "$ROOT_BACKUP_FROM_DIR"* ]]; then
-      echo "$BACKUP_FROM_DIR" is not in the root backup directory $ROOT_BACKUP_FROM_DIR
+    # first check that it's within ROOT_BACKUP_SRC_DIR
+    if [[ ! "$DIR" = "$ROOT_BACKUP_SRC_DIR"* ]]; then
+      echo "$BACKUP_SRC_DIR" is not in the root backup directory $ROOT_BACKUP_SRC_DIR
       exit 1
     fi
 
     # then check that it's not in an excluded dir
     for EX in $EXCLUDES; do
-      if [[ "$BACKUP_FROM_DIR" = "$EX"* ]]; then
-        echo "$BACKUP_FROM_DIR" is in an excluded backup directory: $EX
+      if [[ "$BACKUP_SRC_DIR" = "$EX"* ]]; then
+        echo "$BACKUP_SRC_DIR" is in an excluded backup directory: $EX
         exit 1
       fi
     done
 
-    # now add the additional path of the directory to BACKUP_TO_DIR
-    parent_root_dir="$(dirname $ROOT_BACKUP_FROM_DIR)"
-    parent_dir_to_backup="$(dirname $BACKUP_FROM_DIR)"
-    BACKUP_TO_DIR="$BACKUP_TO_DIR"/"${parent_dir_to_backup#$parent_root_dir}"
-    mkdir -p "$BACKUP_TO_DIR"
+    # now add the additional path of the directory to BACKUP_DEST_DIR
+    parent_root_dir="$(dirname $ROOT_BACKUP_SRC_DIR)"
+    parent_backup_src_dir="$(dirname $BACKUP_SRC_DIR)"
+    BACKUP_DEST_DIR="$BACKUP_DEST_DIR"/"${parent_backup_src_dir#$parent_root_dir}"
+    mkdir -p "$BACKUP_DEST_DIR"
     # example:
     #   initially:
-    #   BACKUP_TO_DIR = /media/mivkov/backup
-    #   BACKUP_FROM_DIR = /home/mivkov/xkcd/ksbd/ToG
+    #   BACKUP_DEST_DIR = /media/mivkov/backup
+    #   BACKUP_SRC_DIR = /home/mivkov/xkcd/ksbd/ToG
     #
     #   change into:
     #   parent_root_dir = /home
     #   parent_dir_to_backup = /home/mivkov/xkcd/ksbd
-    #   BACKUP_TO_DIR += /mivkov/xkcd
+    #   BACKUP_DEST_DIR += /mivkov/xkcd
 
-    echo "---Minimal backup: backing '$BACKUP_FROM_DIR'---"
-    $rsync_cmd "$BACKUP_FROM_DIR" "$BACKUP_TO_DIR" --log-file=rsync-backup-HP-"$DATE"-"$DIR".log
+    echo "---Minimal backup: backing '$BACKUP_SRC_DIR'---"
+    $rsync_cmd "$BACKUP_SRC_DIR" "$BACKUP_DEST_DIR" --log-file=rsync-backup-HP-"$DATE"-"$DIR".log
 
   done
   echo "---Minimal backup ended---"
@@ -249,31 +249,10 @@ if [[ "$MINIMAL" = "true" ]]; then
 fi
 
 
-# get and prepare cmdline args
-# if [ $# = 0 ]; then
-#   echo "Doing full backup."
-#   do_full=true
-#   BACKUP_FROM_DIR="$ROOT_BACKUP_FROM_DIR"
-# elif [ $# == 1 ]; then
-#   do_full=false
-#   dir_given=$1
-#   BACKUP_FROM_DIR=`realpath $dir_given`
-#   if [ ! -d $DIR_TO_BACKUP ]; then
-#       echo "Didn't find directory you've provided: '"$dir_given"'"
-#       exit 1
-#   else
-#       echo "Doing partial backup of" "$dir_given"
-#     fi
-# else
-#     echo "Too many cmdline args. I only accept 1 (specific dir to backup) or none (do full backup)"
-#     exit 1
-# fi
-
-
 # Doing full backup, then
-BACKUP_FROM_DIR="$ROOT_BACKUP_FROM_DIR"
+BACKUP_SRC_DIR="$ROOT_BACKUP_SRC_DIR"
 
 echo "---Starting full backup---"
-$rsync_cmd "$BACKUP_FROM_DIR" "$BACKUP_TO_DIR"
+$rsync_cmd "$BACKUP_SRC_DIR" "$BACKUP_DEST_DIR"
 echo "---Full backup ended---"
 exit 0
