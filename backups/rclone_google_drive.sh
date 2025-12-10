@@ -98,111 +98,111 @@ if [[ $# == 0 ]]; then
 else
 
   while [[ $# > 0 ]]; do
-  ARG="$1"
+    ARG="$1"
 
-  case $ARG in
-    -u | --up | --push)
-      PUSH="true"
-    ;;
+    case $ARG in
+      -u | --up | --push)
+        PUSH="true"
+      ;;
 
-    -d | --down | --pull)
-      PULL="true"
-    ;;
+      -d | --down | --pull)
+        PULL="true"
+      ;;
 
-    --pullsync)
-      PULLSYNC="true"
-    ;;
+      --pullsync)
+        PULLSYNC="true"
+      ;;
 
-    --pushsync)
-      PUSHSYNC="true"
-    ;;
+      --pushsync)
+        PUSHSYNC="true"
+      ;;
 
-    -b | --sync | --bisync )
-      SYNC="true"
-    ;;
+      -b | --sync | --bisync )
+        SYNC="true"
+      ;;
 
-    -a | --all)
-      ALL="true"
-    ;;
+      -a | --all)
+        ALL="true"
+      ;;
 
-    -w | --work)
-      WORK="true"
-    ;;
+      -w | --work)
+        WORK="true"
+      ;;
 
-    -p | --personal)
-      PERSONAL="true"
-    ;;
+      -p | --personal)
+        PERSONAL="true"
+      ;;
 
-    -t | --testing)
-      TESTING="true"
-    ;;
+      -t | --testing)
+        TESTING="true"
+      ;;
 
-    --docs)
-      PERSONAL_DOCS="true"
-    ;;
+      --docs)
+        PERSONAL_DOCS="true"
+      ;;
 
-    --pics | --pictures)
-      PICTURES="true"
-    ;;
+      --pics | --pictures)
+        PICTURES="true"
+      ;;
 
-    --ao3)
-      AO3="true"
-    ;;
+      --ao3)
+        AO3="true"
+      ;;
 
-    --workdocs)
-      WORKDOCS="true"
-    ;;
+      --workdocs)
+        WORKDOCS="true"
+      ;;
 
-    --teaching)
-      TEACHING="true"
-    ;;
+      --teaching)
+        TEACHING="true"
+      ;;
 
-    --zotero)
-      ZOTERO="true"
-    ;;
+      --zotero)
+        ZOTERO="true"
+      ;;
 
-    --calibre)
-      CALIBRE="true"
-    ;;
+      --calibre)
+        CALIBRE="true"
+      ;;
 
-    --work-archive)
-      WORK_ARCHIVE="true"
-    ;;
+      --work-archive)
+        WORK_ARCHIVE="true"
+      ;;
 
-    --mail-archive)
-      MAIL_ARCHIVE="true"
-    ;;
+      --mail-archive)
+        MAIL_ARCHIVE="true"
+      ;;
 
-    --docs-archive)
-      DOCS_ARCHIVE="true"
-    ;;
+      --docs-archive)
+        DOCS_ARCHIVE="true"
+      ;;
 
-    --resync)
-      RESYNC="true"
-    ;;
+      --resync)
+        RESYNC="true"
+      ;;
 
-    --force)
-      FORCE="true"
-    ;;
+      --force)
+        FORCE="true"
+      ;;
 
-    --dry-run)
-      DRYRUN="true"
-    ;;
+      --dry-run)
+        DRYRUN="true"
+      ;;
 
-    -h | --help)
-      echo "$ERRMSG"
-      exit
-    ;;
+      -h | --help)
+        echo "$ERRMSG"
+        exit
+      ;;
 
-    *)
-      echo "Error: Unknown argument:" $ARG
-      echo "use -h or --help for help."
-      echo ""
-      exit 1
-    ;;
-  esac
+      *)
+        echo "Error: Unknown argument:" $ARG
+        echo "use -h or --help for help."
+        echo ""
+        exit 1
+      ;;
+    esac
 
-  shift
+    shift
   done
 fi
 
