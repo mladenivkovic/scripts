@@ -124,6 +124,9 @@ EXCLUDEFILES="$EXCLUDEFILES **/Peano/**/*.a"
 EXCLUDEFILES="$EXCLUDEFILES **/Peano/**/*.Po"
 EXCLUDEFILES="$EXCLUDEFILES **/Peano/doxygen-html/**"
 EXCLUDEFILES="$EXCLUDEFILES **/swiftsim/**/*.o"
+EXCLUDEFILES="$EXCLUDEFILES **/swiftsim/**/*.o"
+EXCLUDEFILES="$EXCLUDEFILES **/swiftsim/**/*.lo"
+EXCLUDEFILES="$EXCLUDEFILES **/swiftsim/**/*.Plo"
 
 # generate exclusion string for rsync
 excludestr_rsync=""
