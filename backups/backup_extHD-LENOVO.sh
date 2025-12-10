@@ -23,8 +23,8 @@ DATE=`date +%F_%Hh%M`                        # current time
 BACKUP_DIR=/run/media/mivkov/BACKUP_LENOVO/  # where to store the backup
 
 if [ ! -d "$BACKUP_DIR" ]; then
-    echo "Din't find target dir" $BACKUP_DIR
-    exit 1
+  echo "Din't find target dir" $BACKUP_DIR
+  exit 1
 fi
 
 
@@ -40,7 +40,7 @@ EXCLUDES="$EXCLUDES .dbus"
 # generate exclusion string for rsync
 excludestr_rsync=""
 for EX in $EXCLUDES; do
-    excludestr_rsync="$excludestr_rsync ""--exclude=$EX/**"" --exclude=$EX "
+  excludestr_rsync="$excludestr_rsync ""--exclude=$EX/**"" --exclude=$EX "
 done
 
 # echo "|"$EXCLUDES"|"
@@ -52,60 +52,60 @@ done
 
 # get and prepare cmdline args
 if [ $# = 0 ]; then
-    echo "Doing full backup."
-    do_full=true
-    DIR_TO_BACKUP="$ROOT_BACKUP_DIR"
+  echo "Doing full backup."
+  do_full=true
+  DIR_TO_BACKUP="$ROOT_BACKUP_DIR"
 elif [ $# == 1 ]; then
-    do_full=false
-    dir_given=$1
-    DIR_TO_BACKUP=`realpath $dir_given`
-    if [ ! -d $DIR_TO_BACKUP ]; then
-        echo "Didn't find directory you've provided: '"$dir_given"'"
-        exit 1
-    else
-        echo "Doing partial backup of" "$dir_given"
-    fi
-else
-    echo "Too many cmdline args. I only accept 1 (specific dir to backup) or none (do full backup)"
+  do_full=false
+  dir_given=$1
+  DIR_TO_BACKUP=`realpath $dir_given`
+  if [ ! -d $DIR_TO_BACKUP ]; then
+    echo "Didn't find directory you've provided: '"$dir_given"'"
     exit 1
+  else
+    echo "Doing partial backup of" "$dir_given"
+  fi
+else
+  echo "Too many cmdline args. I only accept 1 (specific dir to backup) or none (do full backup)"
+  exit 1
 fi
 
 
 # if partial backup:
 if [[ "$do_full" = false ]]; then
 
-    # first check that it's within ROOT_BACKUP_DIR
-    if [[ ! "$DIR_TO_BACKUP" = "$ROOT_BACKUP_DIR"* ]]; then
-        echo "$dir_given" is not in the root backup directory $ROOT_BACKUP_DIR
-        exit 1
-    else
-        echo "Continuing partial backup, is in root dir"
+  # first check that it's within ROOT_BACKUP_DIR
+  if [[ ! "$DIR_TO_BACKUP" = "$ROOT_BACKUP_DIR"* ]]; then
+    echo "$dir_given" is not in the root backup directory $ROOT_BACKUP_DIR
+    exit 1
+  else
+    echo "Continuing partial backup, is in root dir"
+  fi
+
+  # then check that it's not in an excluded dir
+  for EX in $EXCLUDES; do
+    if [[ "$DIR_TO_BACKUP" = "$EX"* ]]; then
+      echo "$dir_given" is in an excluded backup directory: $EX
+      exit 1
     fi
-
-    # then check that it's not in an excluded dir
-    for EX in $EXCLUDES; do
-        if [[ "$DIR_TO_BACKUP" = "$EX"* ]]; then
-            echo "$dir_given" is in an excluded backup directory: $EX
-            exit 1
-        fi
-    done
-    echo "Continuing partial backup, not in excludes"
+  done
+  echo "Continuing partial backup, not in excludes"
 
 
-    # now add the additional path of the directory to BACKUP_DIR
-    parent_root_dir="$(dirname $ROOT_BACKUP_DIR)"
-    parent_dir_to_backup="$(dirname $DIR_TO_BACKUP)"
-    BACKUP_DIR="$BACKUP_DIR"/"${parent_dir_to_backup#$parent_root_dir}"
-    mkdir -p "$BACKUP_DIR"
-    # example:
-    #   initially:
-    #   BACKUP_DIR = /media/mivkov/backup
-    #   DIR_TO_BACKUP = /home/mivkov/xkcd/oglaf/ToG
-    #
-    #   change into:
-    #   parent_root_dir = /home
-    #   parent_dir_to_backup = /home/mivkov/xkcd/oglaf
-    #   BACKUP_DIR += /mivkov/xkcd
+  # now add the additional path of the directory to BACKUP_DIR
+  parent_root_dir="$(dirname $ROOT_BACKUP_DIR)"
+  parent_dir_to_backup="$(dirname $DIR_TO_BACKUP)"
+  BACKUP_DIR="$BACKUP_DIR"/"${parent_dir_to_backup#$parent_root_dir}"
+  mkdir -p "$BACKUP_DIR"
+  # example:
+  #   initially:
+  #   BACKUP_DIR = /media/mivkov/backup
+  #   DIR_TO_BACKUP = /home/mivkov/xkcd/oglaf/ToG
+  #
+  #   change into:
+  #   parent_root_dir = /home
+  #   parent_dir_to_backup = /home/mivkov/xkcd/oglaf
+  #   BACKUP_DIR += /mivkov/xkcd
 
 fi
 
