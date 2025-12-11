@@ -73,6 +73,18 @@ if [ ! -d "$BACKUP_DEST_DIR"/$HOMEDIR_BASENAME ]; then
   fi
 
   # try the third HDD
+  BACKUP_DEST_DIR=/home/mivkov/Encfs/BACKUP_LENOVO_LEGION_DAVOS/  # where to store the backup
+  if [ ! -d "$BACKUP_DEST_DIR/$HOMEDIR_BASENAME" ]; then
+    echo "Din't find target dir '"$BACKUP_DEST_DIR/$HOMEDIR_BASENAME"', trying fourth option"
+  else
+    found_dir="true"
+    if [[ "$MINIMAL" != "true" ]]; then
+      echo "I thought this HD should only run minimal backups. You sure you know what you're doing?"
+      exit
+    fi
+  fi
+
+  # try the fourth HDD
   if [[ "$found_dir" == "false" ]]; then
     BACKUP_DEST_DIR=/home/mivkov/Encfs/BACKUP_LENOVO_LEGION_DAVOS_OLD/  # where to store the backup
     if [ ! -d "$BACKUP_DEST_DIR/$HOMEDIR_BASENAME" ]; then
@@ -81,6 +93,8 @@ if [ ! -d "$BACKUP_DEST_DIR"/$HOMEDIR_BASENAME ]; then
       exit 1
     fi
   fi
+
+
 fi
 
 echo Writing backup to "$BACKUP_DEST_DIR"

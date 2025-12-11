@@ -90,6 +90,10 @@ if [ ! -d "$BACKUP_DEST_DIR"/$HOMEDIR_BASENAME ]; then
       echo "Din't find target dir '"$BACKUP_DEST_DIR/$HOMEDIR_BASENAME"', trying fifth option"
     else
       found_dir="true"
+      if [[ "$MINIMAL" != "true" ]]; then
+        echo "I thought this HD should only run minimal backups. You sure you know what you're doing?"
+        exit
+      fi
     fi
   fi
 
