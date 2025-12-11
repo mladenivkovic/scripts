@@ -327,17 +327,18 @@ fi
 # --------------------
 HOST=`hostname`
 HOSTNAME_LENOVO_THINKPAD="mladen-lenovoThinkpad"
+HOSTNAME_LENOVO_LEGION="mivkov-lenovo-legion"
 HOSTNAME_HP_PROBOOK="mivkov-hpprobook"
 
-DO_LENOVO_THINKPAD="false"
-DO_HP_PROBOOK="false"
+DO_PRIVATE_MACHINE="false"
+DO_WORK_MACHINE="false"
 
 case $HOST in
-  $HOSTNAME_LENOVO_THINKPAD )
-    DO_LENOVO_THINKPAD="true"
+  $HOSTNAME_LENOVO_THINKPAD | $HOSTNAME_LENOVO_LEGION)
+    DO_PRIVATE_MACHINE="true"
   ;;
   $HOSTNAME_HP_PROBOOK )
-    DO_HP_PROBOOK="true"
+    DO_WORK_MACHINE="true"
   ;;
   *)
     echo "Unrecognized hostname. Adapt script before you break things."
@@ -477,7 +478,7 @@ fi
 
 if [[ "$PERSONAL" == "true" || "$ALL" == "true" ]]; then
 
-  if [[ "$DO_LENOVO_THINKPAD" == "true" ]]; then
+  if [[ "$DO_PRIVATE_MACHINE" == "true" ]]; then
     rclone_cmd $HOME/Pictures/profile_pics "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/profile_pics
 
     rclone_cmd $HOME/Pictures/Memories/videos "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/videos
@@ -495,7 +496,7 @@ if [[ "$PERSONAL" == "true" || "$ALL" == "true" ]]; then
   rclone_cmd $HOME/Pictures/Memories/2025 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2025
 
   rclone_cmd $HOME/Documents/important "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Documents/important --exclude=**/recovery/** --exclude=recovery/**
-  if [[ "$DO_LENOVO_THINKPAD" == "true" ]]; then
+  if [[ "$DO_PRIVATE_MACHINE" == "true" ]]; then
     rclone_cmd $HOME/Documents/creative "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Documents/creative
   fi
 
@@ -506,7 +507,7 @@ else
   # See if we're syncing specific dirs then
 
   if [[ "$PICTURES" == "true" ]]; then
-    if [[ "$DO_LENOVO_THINKPAD" == "true" ]]; then
+    if [[ "$DO_PRIVATE_MACHINE" == "true" ]]; then
       rclone_cmd $HOME/Pictures/profile_pics "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/profile_pics
 
       rclone_cmd $HOME/Pictures/Memories/videos "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/videos
@@ -538,7 +539,7 @@ fi
 
 if [[ "$WORK_ARCHIVE" == "true" ]]; then
 
-  if [[ "$DO_HP_PROBOOK" == "true" ]]; then
+  if [[ "$DO_WORK_MACHINE" == "true" ]]; then
     echo "Are you sure you're on the right machine???"
     exit
   fi
@@ -556,7 +557,7 @@ fi
 
 if [[ "$DOCS_ARCHIVE" == "true" ]]; then
 
-  if [[ "$DO_HP_PROBOOK" == "true" ]]; then
+  if [[ "$DO_WORK_MACHINE" == "true" ]]; then
     echo "Are you sure you're on the right machine???"
     exit
   fi
@@ -574,7 +575,7 @@ fi
 
 if [[ "$MAIL_ARCHIVE" == "true" ]]; then
 
-  if [[ "$DO_HP_PROBOOK" == "true" ]]; then
+  if [[ "$DO_WORK_MACHINE" == "true" ]]; then
     echo "Are you sure you're on the right machine???"
     exit
   fi

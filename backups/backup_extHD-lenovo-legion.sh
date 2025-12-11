@@ -24,7 +24,7 @@ usage:
 
 ROOT_BACKUP_SRC_DIR=$HOME                      # Root dir to backup
 DATE=`date +%F_%Hh%M`                          # current time
-BACKUP_DEST_DIR=/home/mivkov/Encfs/BACKUP_HP/  # where to store the backup
+BACKUP_DEST_DIR=/home/mivkov/Encfs/BACKUP_LENOVO_LEGION/  # where to store the backup
 HOMEDIR_BASENAME=`basename $HOME`
 
 
@@ -62,27 +62,45 @@ done
 
 if [ ! -d "$BACKUP_DEST_DIR"/$HOMEDIR_BASENAME ]; then
   echo "Din't find target dir '"$BACKUP_DEST_DIR/$HOMEDIR_BASENAME"', trying second option"
-  # echo "Did you remember to mount the encrypted drives?"
-  exit 1
+
+  # try the second HDD
+  found_dir="false"
+  BACKUP_DEST_DIR=/home/mivkov/Encfs/BACKUP_LENOVO_LEGION_HOME/  # where to store the backup
+  if [ ! -d "$BACKUP_DEST_DIR/$HOMEDIR_BASENAME" ]; then
+    echo "Din't find target dir '"$BACKUP_DEST_DIR/$HOMEDIR_BASENAME"', trying third option"
+  else
+    found_dir="true"
+  fi
+
+  # try the third HDD
+  if [[ "$found_dir" == "false" ]]; then
+    BACKUP_DEST_DIR=/home/mivkov/Encfs/BACKUP_LENOVO_LEGION_DAVOS_OLD/  # where to store the backup
+    if [ ! -d "$BACKUP_DEST_DIR/$HOMEDIR_BASENAME" ]; then
+      echo "Din't find target dir '"$BACKUP_DEST_DIR/$HOMEDIR_BASENAME"'"
+      echo "Did you remember to mount the encrypted drives?"
+      exit 1
+    fi
+  fi
 fi
 
 echo Writing backup to "$BACKUP_DEST_DIR"
 
 
 EXCLUDEDIRS="" # Define parent directories that are to be excluded here
-# EXCLUDEDIRS="$EXCLUDEDIRS Audiobooks"
+EXCLUDEDIRS="$EXCLUDEDIRS Audiobooks"
 # EXCLUDEDIRS="$EXCLUDEDIRS Downloads"
-# EXCLUDEDIRS="$EXCLUDEDIRS Dropbox"
+EXCLUDEDIRS="$EXCLUDEDIRS Dropbox"
 # EXCLUDEDIRS="$EXCLUDEDIRS dwhelper"
 EXCLUDEDIRS="$EXCLUDEDIRS Encfs"
 EXCLUDEDIRS="$EXCLUDEDIRS google-drive"
 # EXCLUDEDIRS="$EXCLUDEDIRS Music"
-# EXCLUDEDIRS="$EXCLUDEDIRS Podcasts"
-# EXCLUDEDIRS="$EXCLUDEDIRS Steam"
+EXCLUDEDIRS="$EXCLUDEDIRS Podcasts"
+EXCLUDEDIRS="$EXCLUDEDIRS Steam"
 # EXCLUDEDIRS="$EXCLUDEDIRS Templates"
 # EXCLUDEDIRS="$EXCLUDEDIRS texmf"
 # EXCLUDEDIRS="$EXCLUDEDIRS Videos"
 EXCLUDEDIRS="$EXCLUDEDIRS .dbus"
+EXCLUDEDIRS="$EXCLUDEDIRS .cache"
 
 EXCLUDEFILES="" # Define file patterns that are to be excluded here
 EXCLUDEFILES="$EXCLUDEFILES **/Peano/**/celldata/**"
