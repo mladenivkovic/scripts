@@ -225,7 +225,7 @@ if [[ "$MINIMAL" = "true" ]]; then
 
   echo "---Starting minimal backup---"
 
-  for DIR in $MINIMAL_SOURCES; do
+  for DIR in $MINIMAL_ROOT_SOURCES; do
 
     BACKUP_SRC_DIR=`realpath $DIR`
 
