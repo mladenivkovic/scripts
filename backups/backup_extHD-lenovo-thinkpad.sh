@@ -83,6 +83,8 @@ EXCLUDEDIRS="$EXCLUDEDIRS google-drive"
 # EXCLUDEDIRS="$EXCLUDEDIRS texmf"
 # EXCLUDEDIRS="$EXCLUDEDIRS Videos"
 EXCLUDEDIRS="$EXCLUDEDIRS .dbus"
+EXCLUDEDIRS="$EXCLUDEDIRS .cache"
+EXCLUDEDIRS="$EXCLUDEDIRS .mozilla"
 
 EXCLUDEFILES="" # Define file patterns that are to be excluded here
 EXCLUDEFILES="$EXCLUDEFILES **/Peano/**/celldata/**"
@@ -97,6 +99,10 @@ EXCLUDEFILES="$EXCLUDEFILES **/Peano/doxygen-html/**"
 EXCLUDEFILES="$EXCLUDEFILES **/swiftsim/**/*.o"
 EXCLUDEFILES="$EXCLUDEFILES **/swiftsim/**/*.lo"
 EXCLUDEFILES="$EXCLUDEFILES **/swiftsim/**/*.Plo"
+EXCLUDEFILES="$EXCLUDEFILES **/GPUSWIFT/**/*.o"
+EXCLUDEFILES="$EXCLUDEFILES **/GPUSWIFT/**/*.lo"
+EXCLUDEFILES="$EXCLUDEFILES **/GPUSWIFT/**/*.Plo"
+EXCLUDEFILES="$EXCLUDEFILES **/libswift*"
 
 # generate exclusion string for rsync
 excludestr_rsync=""

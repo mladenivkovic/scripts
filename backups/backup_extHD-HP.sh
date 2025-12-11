@@ -87,11 +87,22 @@ if [ ! -d "$BACKUP_DEST_DIR"/$HOMEDIR_BASENAME ]; then
     # try the fourth HDD
     BACKUP_DEST_DIR=/home/mivkov/Encfs/BACKUP_HP_DAVOS/  # where to store the backup
     if [ ! -d "$BACKUP_DEST_DIR/$HOMEDIR_BASENAME" ]; then
+      echo "Din't find target dir '"$BACKUP_DEST_DIR/$HOMEDIR_BASENAME"', trying fifth option"
+    else
+      found_dir="true"
+    fi
+  fi
+
+  if [[ "$found_dir" == "false" ]]; then
+    # try the fourth HDD
+    BACKUP_DEST_DIR=/home/mivkov/Encfs/BACKUP_HP_DAVOS_OLD/  # where to store the backup
+    if [ ! -d "$BACKUP_DEST_DIR/$HOMEDIR_BASENAME" ]; then
       echo "Din't find target dir '"$BACKUP_DEST_DIR/$HOMEDIR_BASENAME"', exiting"
       echo "Did you remember to mount the encrypted drives?"
       exit 1
     fi
   fi
+
 
 fi
 
@@ -112,6 +123,8 @@ EXCLUDEDIRS="$EXCLUDEDIRS Templates"
 EXCLUDEDIRS="$EXCLUDEDIRS texmf"
 EXCLUDEDIRS="$EXCLUDEDIRS Videos"
 EXCLUDEDIRS="$EXCLUDEDIRS .dbus"
+EXCLUDEDIRS="$EXCLUDEDIRS .cache"
+EXCLUDEDIRS="$EXCLUDEDIRS .mozilla"
 
 EXCLUDEFILES="" # Define file patterns that are to be excluded here
 EXCLUDEFILES="$EXCLUDEFILES **/Peano/**/celldata/**"
@@ -124,9 +137,12 @@ EXCLUDEFILES="$EXCLUDEFILES **/Peano/**/*.a"
 EXCLUDEFILES="$EXCLUDEFILES **/Peano/**/*.Po"
 EXCLUDEFILES="$EXCLUDEFILES **/Peano/doxygen-html/**"
 EXCLUDEFILES="$EXCLUDEFILES **/swiftsim/**/*.o"
-EXCLUDEFILES="$EXCLUDEFILES **/swiftsim/**/*.o"
 EXCLUDEFILES="$EXCLUDEFILES **/swiftsim/**/*.lo"
 EXCLUDEFILES="$EXCLUDEFILES **/swiftsim/**/*.Plo"
+EXCLUDEFILES="$EXCLUDEFILES **/GPUSWIFT/**/*.o"
+EXCLUDEFILES="$EXCLUDEFILES **/GPUSWIFT/**/*.lo"
+EXCLUDEFILES="$EXCLUDEFILES **/GPUSWIFT/**/*.Plo"
+EXCLUDEFILES="$EXCLUDEFILES **/libswift*"
 
 # generate exclusion string for rsync
 excludestr_rsync=""
