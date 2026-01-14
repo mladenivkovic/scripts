@@ -34,21 +34,25 @@ Usage:
 
   (selection of) directories to sync:
 
-    -a, --all           Sync all (hardcoded) dirs. Equivalent to --work --personal                    [ NOTE: CURRENTLY DISABLED ]
-    -w, --work          Sync (all) work dirs. Equivalent to --workdocs --zotero --calibre --teaching  [ NOTE: CURRENTLY DISABLED ]
-    -p, --personal      Sync (all) private dirs. Equivalent to --docs --pics --ao3                    [ NOTE: CURRENTLY DISABLED ]
-    -t, --testing       Directory to test sync: ~/tmp/testing_sync
-    --docs              Sync private documents      [ NOTE: CURRENTLY DISABLED ]
-    --pics, --pictures  Sync pictures               [ NOTE: CURRENTLY DISABLED ]
+    -a, --all           Sync all (hardcoded) dirs. Equivalent to --ao3 --calibre
+    TODO: Add Calibre
     --ao3               Sync ao3 stuff
-    --workdocs          Sync work documents
-    --teaching          Sync Durham/teaching documents
-    --zotero            Sync zotero dir             [ NOTE: CURRENTLY DISABLED ]
-    --calibre           Sync calibre dir            [ NOTE: CURRENTLY DISABLED ]
 
-    --docs-archive      Sync archive document dirs (not included in -w, -a, -p flags) [ NOTE: CURRENTLY DISABLED]
-    --work-archive      Sync work archive dirs (not included in -w, -a, -p flags)     [ NOTE: CURRENTLY DISABLED]
-    --mail-archive      Sync mail archive dirs (not included in -w, -a, -p flags)     [ NOTE: CURRENTLY DISABLED]
+    [ CURRENTLY DISABLED ] -w, --work          Sync (all) work dirs. Equivalent to --workdocs --zotero --calibre --teaching
+    [ CURRENTLY DISABLED ] -p, --personal      Sync (all) private dirs. Equivalent to --docs --pics --ao3
+    [ CURRENTLY DISABLED ] -t, --testing       Directory to test sync: ~/tmp/testing_sync
+
+    [ CURRENTLY DISABLED ] --docs              Sync private documents
+    [ CURRENTLY DISABLED ] --pics, --pictures  Sync pictures
+    [ CURRENTLY DISABLED ] --zotero            Sync zotero dir
+    [ CURRENTLY DISABLED ] --calibre           Sync calibre dir
+    TODO: enable again
+    [ CURRENTLY DISABLED ] --workdocs          Sync work documents
+    [ CURRENTLY DISABLED ] --teaching          Sync Durham/teaching documents
+
+    [ CURRENTLY DISABLED ] --docs-archive      Sync archive document dirs (not included in -w, -a, -p flags)
+    [ CURRENTLY DISABLED ] --work-archive      Sync work archive dirs (not included in -w, -a, -p flags)
+    [ CURRENTLY DISABLED ] --mail-archive      Sync mail archive dirs (not included in -w, -a, -p flags)
 
   rclone flags:
 
@@ -279,6 +283,18 @@ fi
 
 
 # Temporarily disable certain directories
+if [[ "$WORK" == "true" ]]; then
+  echo "-w, --work is currently disabled"
+  exit
+fi
+if [[ "$PERSONAL" == "true" ]]; then
+  echo "-p, --personal is currently disabled"
+  exit
+fi
+if [[ "$TESTING" == "true" ]]; then
+  echo "-t, --testing is currently disabled"
+  exit
+fi
 if [[ "$DOCS" == "true" ]]; then
   echo "--docs is currently disabled"
   exit
@@ -295,8 +311,12 @@ if [[ "$CALIBRE" == "true" ]]; then
   echo "--calibre is currently disabled"
   exit
 fi
-if [[ "$DOCS_ARCHIVE" == "true" ]]; then
-  echo "--docs-archive is currently disabled"
+if [[ "$WORKDOCS" == "true" ]]; then
+  echo "--workdocs is currently disabled"
+  exit
+fi
+if [[ "$TEACHING" == "true" ]]; then
+  echo "--teaching is currently disabled"
   exit
 fi
 if [[ "$WORK_ARCHIVE" == "true" ]]; then
@@ -307,16 +327,8 @@ if [[ "$MAIL_ARCHIVE" == "true" ]]; then
   echo "--mail-archive is currently disabled"
   exit
 fi
-if [[ "$ALL" == "true" ]]; then
-  echo "-a, --all is currently disabled"
-  exit
-fi
-if [[ "$WORK" == "true" ]]; then
-  echo "-w, --work is currently disabled"
-  exit
-fi
-if [[ "$PERSONAL" == "true" ]]; then
-  echo "-p, --personal is currently disabled"
+if [[ "$DOCS_ARCHIVE" == "true" ]]; then
+  echo "--docs-archive is currently disabled"
   exit
 fi
 
@@ -452,157 +464,160 @@ function rclone_cmd() {
 # Do the actual work
 # --------------------------
 
-if [[ "$WORK" == "true" || "$ALL" == "true" ]]; then
-  rclone_cmd $HOME/Work "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Work
-  rclone_cmd $HOME/Zotero "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Zotero
-  rclone_cmd $HOME/calibre_library "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/calibre_library
-  rclone_cmd $HOME/Durham/teaching "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Durham/teaching
-else
+# if [[ "$WORK" == "true" || "$ALL" == "true" ]]; then
+#   rclone_cmd $HOME/Work "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Work
+#   rclone_cmd $HOME/Zotero "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Zotero
+#   rclone_cmd $HOME/calibre_library "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/calibre_library
+#   rclone_cmd $HOME/Durham/teaching "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Durham/teaching
+# else
+#
+#   # See if we're syncing specific dirs then
+#
+#   if [[ "$WORKDOCS" == "true" ]]; then
+#     rclone_cmd $HOME/Work "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Work
+#   fi
+#   if [[ "$TEACHING" == "true" ]]; then
+#     rclone_cmd $HOME/Durham/teaching "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Durham/teaching
+#   fi
+#   if [[ "$ZOTERO" == "true" ]]; then
+#     rclone_cmd $HOME/Zotero "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Zotero
+#   fi
+#   if [[ "$CALIBRE" == "true" ]]; then
+#     rclone_cmd $HOME/calibre_library "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/calibre_library
+#   fi
+# fi
 
-  # See if we're syncing specific dirs then
 
-  if [[ "$WORKDOCS" == "true" ]]; then
-    rclone_cmd $HOME/Work "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Work
-  fi
-  if [[ "$TEACHING" == "true" ]]; then
-    rclone_cmd $HOME/Durham/teaching "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Durham/teaching
-  fi
-  if [[ "$ZOTERO" == "true" ]]; then
-    rclone_cmd $HOME/Zotero "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Zotero
-  fi
-  if [[ "$CALIBRE" == "true" ]]; then
-    rclone_cmd $HOME/calibre_library "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/calibre_library
-  fi
-fi
+# if [[ "$PERSONAL" == "true" || "$ALL" == "true" ]]; then
+#
+#   if [[ "$DO_PRIVATE_MACHINE" == "true" ]]; then
+#     rclone_cmd $HOME/Pictures/profile_pics "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/profile_pics
+#
+#     rclone_cmd $HOME/Pictures/Memories/videos "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/videos
+#     rclone_cmd $HOME/Pictures/Memories/childhood "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/childhood
+#     rclone_cmd $HOME/Pictures/Memories/Pre-2018 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/Pre-2018
+#     rclone_cmd $HOME/Pictures/Memories/2018 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2018
+#     rclone_cmd $HOME/Pictures/Memories/2019 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2019
+#     rclone_cmd $HOME/Pictures/Memories/2020 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2020
+#     # rclone_cmd $HOME/Pictures/Memories/2021 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2021 # does not exist...
+#     rclone_cmd $HOME/Pictures/Memories/2022 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2022
+#     rclone_cmd $HOME/Pictures/Memories/2023 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2023
+#   fi
+#
+#   rclone_cmd $HOME/Pictures/Memories/2024 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2024
+#   rclone_cmd $HOME/Pictures/Memories/2025 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2025
+#
+#   rclone_cmd $HOME/Documents/important "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Documents/important --exclude=**/recovery/** --exclude=recovery/**
+#   if [[ "$DO_PRIVATE_MACHINE" == "true" ]]; then
+#     rclone_cmd $HOME/Documents/creative "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Documents/creative
+#   fi
+#
+#   rclone_cmd $HOME/.ao3statscraper "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/.ao3statscraper --exclude=ao3statscraper.conf.pkl --exclude=ao3statscraper.conf.yml
+#
+# else
+#
+#   # See if we're syncing specific dirs then
+#
+#   if [[ "$PICTURES" == "true" ]]; then
+#     if [[ "$DO_PRIVATE_MACHINE" == "true" ]]; then
+#       rclone_cmd $HOME/Pictures/profile_pics "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/profile_pics
+#
+#       rclone_cmd $HOME/Pictures/Memories/videos "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/videos
+#       rclone_cmd $HOME/Pictures/Memories/childhood "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/childhood
+#       rclone_cmd $HOME/Pictures/Memories/Pre-2018 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/Pre-2018
+#       rclone_cmd $HOME/Pictures/Memories/2018 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2018
+#       rclone_cmd $HOME/Pictures/Memories/2019 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2019
+#       rclone_cmd $HOME/Pictures/Memories/2020 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2020
+#       # rclone_cmd $HOME/Pictures/Memories/2021 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2021 # does not exist...
+#       rclone_cmd $HOME/Pictures/Memories/2022 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2022
+#       rclone_cmd $HOME/Pictures/Memories/2023 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2023
+#     fi
+#
+#     rclone_cmd $HOME/Pictures/Memories/2024 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2024
+#     rclone_cmd $HOME/Pictures/Memories/2025 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2025
+#   fi
+#
+#   if [[ "$PERSONAL_DOCS" == "true" ]]; then
+#     rclone_cmd $HOME/Documents/important "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Documents/important --exclude=**/recovery/** --exclude=recovery/**
+#   fi
+#
+#   if [[ "$AO3" == "true" ]]; then
+#     rclone_cmd $HOME/.ao3statscraper "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/.ao3statscraper --exclude=ao3statscraper.conf.pkl --exclude=ao3statscraper.conf.yml
+#   fi
+#
+# fi
 
 
-if [[ "$PERSONAL" == "true" || "$ALL" == "true" ]]; then
+# if [[ "$WORK_ARCHIVE" == "true" ]]; then
+#
+#   if [[ "$DO_WORK_MACHINE" == "true" ]]; then
+#     echo "Are you sure you're on the right machine???"
+#     exit
+#   fi
+#
+#   if [[ "$SYNC" == "true" ]]; then
+#     echo "Are you sure you want to bi-sync?"
+#     exit
+#   fi
+#
+#   rclone_cmd $HOME/Documents/archive_work "$GOOGLE_DRIVE_REMOTE_NAME":$REMOTE_ARCHIVE_ROOT_DIR/archive_work
+#
+# fi
 
-  if [[ "$DO_PRIVATE_MACHINE" == "true" ]]; then
-    rclone_cmd $HOME/Pictures/profile_pics "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/profile_pics
 
-    rclone_cmd $HOME/Pictures/Memories/videos "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/videos
-    rclone_cmd $HOME/Pictures/Memories/childhood "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/childhood
-    rclone_cmd $HOME/Pictures/Memories/Pre-2018 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/Pre-2018
-    rclone_cmd $HOME/Pictures/Memories/2018 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2018
-    rclone_cmd $HOME/Pictures/Memories/2019 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2019
-    rclone_cmd $HOME/Pictures/Memories/2020 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2020
-    # rclone_cmd $HOME/Pictures/Memories/2021 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2021 # does not exist...
-    rclone_cmd $HOME/Pictures/Memories/2022 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2022
-    rclone_cmd $HOME/Pictures/Memories/2023 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2023
-  fi
 
-  rclone_cmd $HOME/Pictures/Memories/2024 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2024
-  rclone_cmd $HOME/Pictures/Memories/2025 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2025
+# if [[ "$DOCS_ARCHIVE" == "true" ]]; then
+#
+#   if [[ "$DO_WORK_MACHINE" == "true" ]]; then
+#     echo "Are you sure you're on the right machine???"
+#     exit
+#   fi
+#
+#   if [[ "$SYNC" == "true" ]]; then
+#     echo "Are you sure you want to bi-sync?"
+#     exit
+#   fi
+#
+#   rclone_cmd $HOME/Documents/archive_docs "$GOOGLE_DRIVE_REMOTE_NAME":$REMOTE_ARCHIVE_ROOT_DIR/archive_docs
+#
+# fi
 
-  rclone_cmd $HOME/Documents/important "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Documents/important --exclude=**/recovery/** --exclude=recovery/**
-  if [[ "$DO_PRIVATE_MACHINE" == "true" ]]; then
-    rclone_cmd $HOME/Documents/creative "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Documents/creative
-  fi
 
+
+# if [[ "$MAIL_ARCHIVE" == "true" ]]; then
+#
+#   if [[ "$DO_WORK_MACHINE" == "true" ]]; then
+#     echo "Are you sure you're on the right machine???"
+#     exit
+#   fi
+#
+#   if [[ "$SYNC" == "true" ]]; then
+#     echo "Are you sure you want to bi-sync?"
+#     exit
+#   fi
+#
+#   rclone_cmd $HOME/Documents/archive_mail "$GOOGLE_DRIVE_REMOTE_NAME":$REMOTE_ARCHIVE_ROOT_DIR/archive_mail
+#
+# fi
+
+
+# if [[ "$TESTING" == "true" ]]; then
+#   # Setting up basics:
+#   # mkdir -p ~/tmp/testing_sync
+#   # mkdir -p ~/tmp/testing_sync/dir1
+#   # mkdir -p ~/tmp/testing_sync/exclude
+#   # echo "Hello there" > ~/tmp/testing_sync/dir1/file1.txt
+#   # echo "Hello there" > ~/tmp/testing_sync/dir1/file2.txt
+#   # echo "Hello there" > ~/tmp/testing_sync/exclude/file1.txt
+#   # echo "Hello there" > ~/tmp/testing_sync/exclude/file2.txt
+#   # echo "Hello there" > ~/tmp/testing_sync/file1.txt
+#   # echo "Hello there" > ~/tmp/testing_sync/file2.txt
+#
+#   rclone_cmd $HOME/tmp/testing_sync "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR" --exclude=exclude/
+# fi
+
+
+if [[ "$AO3" == "true" || "$ALL" == "true" ]]; then
   rclone_cmd $HOME/.ao3statscraper "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/.ao3statscraper --exclude=ao3statscraper.conf.pkl --exclude=ao3statscraper.conf.yml
-
-else
-
-  # See if we're syncing specific dirs then
-
-  if [[ "$PICTURES" == "true" ]]; then
-    if [[ "$DO_PRIVATE_MACHINE" == "true" ]]; then
-      rclone_cmd $HOME/Pictures/profile_pics "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/profile_pics
-
-      rclone_cmd $HOME/Pictures/Memories/videos "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/videos
-      rclone_cmd $HOME/Pictures/Memories/childhood "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/childhood
-      rclone_cmd $HOME/Pictures/Memories/Pre-2018 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/Pre-2018
-      rclone_cmd $HOME/Pictures/Memories/2018 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2018
-      rclone_cmd $HOME/Pictures/Memories/2019 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2019
-      rclone_cmd $HOME/Pictures/Memories/2020 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2020
-      # rclone_cmd $HOME/Pictures/Memories/2021 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2021 # does not exist...
-      rclone_cmd $HOME/Pictures/Memories/2022 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2022
-      rclone_cmd $HOME/Pictures/Memories/2023 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2023
-    fi
-
-    rclone_cmd $HOME/Pictures/Memories/2024 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2024
-    rclone_cmd $HOME/Pictures/Memories/2025 "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Pictures/Memories/2025
-  fi
-
-  if [[ "$PERSONAL_DOCS" == "true" ]]; then
-    rclone_cmd $HOME/Documents/important "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Documents/important --exclude=**/recovery/** --exclude=recovery/**
-  fi
-
-  if [[ "$AO3" == "true" ]]; then
-    rclone_cmd $HOME/.ao3statscraper "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/.ao3statscraper --exclude=ao3statscraper.conf.pkl --exclude=ao3statscraper.conf.yml
-  fi
-
 fi
-
-
-
-if [[ "$WORK_ARCHIVE" == "true" ]]; then
-
-  if [[ "$DO_WORK_MACHINE" == "true" ]]; then
-    echo "Are you sure you're on the right machine???"
-    exit
-  fi
-
-  if [[ "$SYNC" == "true" ]]; then
-    echo "Are you sure you want to bi-sync?"
-    exit
-  fi
-
-  rclone_cmd $HOME/Documents/archive_work "$GOOGLE_DRIVE_REMOTE_NAME":$REMOTE_ARCHIVE_ROOT_DIR/archive_work
-
-fi
-
-
-
-if [[ "$DOCS_ARCHIVE" == "true" ]]; then
-
-  if [[ "$DO_WORK_MACHINE" == "true" ]]; then
-    echo "Are you sure you're on the right machine???"
-    exit
-  fi
-
-  if [[ "$SYNC" == "true" ]]; then
-    echo "Are you sure you want to bi-sync?"
-    exit
-  fi
-
-  rclone_cmd $HOME/Documents/archive_docs "$GOOGLE_DRIVE_REMOTE_NAME":$REMOTE_ARCHIVE_ROOT_DIR/archive_docs
-
-fi
-
-
-
-if [[ "$MAIL_ARCHIVE" == "true" ]]; then
-
-  if [[ "$DO_WORK_MACHINE" == "true" ]]; then
-    echo "Are you sure you're on the right machine???"
-    exit
-  fi
-
-  if [[ "$SYNC" == "true" ]]; then
-    echo "Are you sure you want to bi-sync?"
-    exit
-  fi
-
-  rclone_cmd $HOME/Documents/archive_mail "$GOOGLE_DRIVE_REMOTE_NAME":$REMOTE_ARCHIVE_ROOT_DIR/archive_mail
-
-fi
-
-
-if [[ "$TESTING" == "true" ]]; then
-  # Setting up basics:
-  # mkdir -p ~/tmp/testing_sync
-  # mkdir -p ~/tmp/testing_sync/dir1
-  # mkdir -p ~/tmp/testing_sync/exclude
-  # echo "Hello there" > ~/tmp/testing_sync/dir1/file1.txt
-  # echo "Hello there" > ~/tmp/testing_sync/dir1/file2.txt
-  # echo "Hello there" > ~/tmp/testing_sync/exclude/file1.txt
-  # echo "Hello there" > ~/tmp/testing_sync/exclude/file2.txt
-  # echo "Hello there" > ~/tmp/testing_sync/file1.txt
-  # echo "Hello there" > ~/tmp/testing_sync/file2.txt
-
-  rclone_cmd $HOME/tmp/testing_sync "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR" --exclude=exclude/
-fi
-
 
