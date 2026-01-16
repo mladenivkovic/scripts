@@ -52,4 +52,7 @@ find . -name "*.pyc" -exec rm -rfv {} \;
 # check for open office lock files
 find . -name ".~lock.*" -exec rm -rfv {} \;
 
+# Search for backup files and delete them
+find . -name "._*" -exec rm -rfv {} \;
+find . -name ".DS_Store" -exec rm -rfv {} \;
 
