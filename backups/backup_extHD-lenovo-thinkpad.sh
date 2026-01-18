@@ -22,9 +22,9 @@ usage:
 
 
 
-ROOT_BACKUP_SRC_DIR=$HOME                      # Root dir to backup
-DATE=`date +%F_%Hh%M`                          # current time
-BACKUP_DEST_DIR=/home/mivkov/Encfs/BACKUP_HP/  # where to store the backup
+ROOT_BACKUP_SRC_DIR=$HOME                        # Root dir to backup
+DATE=`date +%F_%Hh%M`                            # current time
+BACKUP_DEST_DIR=/run/media/mivkov/BACKUP_LENOVO  # where to store the backup
 HOMEDIR_BASENAME=`basename $HOME`
 
 
