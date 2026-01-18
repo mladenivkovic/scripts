@@ -550,13 +550,14 @@ if [[ "$PICTURES" == "true" ]]; then
         # sync_dir $HOME/Pictures/Memories/2021 sync/Pictures/Memories/2021 # does not exist...
         sync_dir $HOME/Pictures/Memories/2022 sync/Pictures/Memories/2022 sync_HD_default.prf
         sync_dir $HOME/Pictures/Memories/2023 sync/Pictures/Memories/2023 sync_HD_default.prf
+        sync_dir $HOME/Pictures/Memories/2024 Pictures/Memories/2024 sync_HD_default.prf
 
         sync_dir $HOME/Pictures/Wallpaper sync/Pictures/Wallpaper sync_HD_default.prf
         sync_dir $HOME/Pictures/screenshots_keep sync/Pictures/screenshots_keep sync_HD_default.prf
     fi
 
-    sync_dir $HOME/Pictures/Memories/2024 Pictures/Memories/2024 sync_HD_default.prf
     sync_dir $HOME/Pictures/Memories/2025 Pictures/Memories/2025 sync_HD_default.prf
+    sync_dir $HOME/Pictures/Memories/2026 Pictures/Memories/2026 sync_HD_default.prf
 
     sync_dir $HOME/Pictures/profile_pics sync/Pictures/profile_pics sync_HD_default.prf
 fi
@@ -579,17 +580,25 @@ fi
 if [[ "$STORAGE" == "true" ]]; then
 
     if [[ "$DO_HP_PROBOOK" == "true" ]]; then
-        echo "Trying to backup storage dirs."
-        echo "Are you sure you're on the right machine???"
-        exit 1
-    fi
+        if [[ "$ALL" == "true" ]]; then
+            echo "Trying to backup storage dirs."
+            echo "Are you sure you're on the right machine???"
+        else
+            echo "Trying to backup storage dirs."
+            echo "Are you sure you're on the right machine???"
+            exit 1
+        fi
 
-    LOCALDIR=$HOME/storage
-    if [[ "$DO_LENOVO_LEGION" == "true" ]]; then
-        LOCALDIR=/run/media/InternalHD/storage
-    fi
+    else
 
-    sync_dir "$LOCALDIR" sync/storage sync_HD_default.prf
+        LOCALDIR=$HOME/storage
+        if [[ "$DO_LENOVO_LEGION" == "true" ]]; then
+            LOCALDIR=/run/media/InternalHD/storage
+        fi
+
+        sync_dir "$LOCALDIR" sync/storage sync_HD_default.prf
+
+    fi
 fi
 
 
