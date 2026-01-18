@@ -541,9 +541,6 @@ fi
 
 if [[ "$PICTURES" == "true" ]]; then
     if [[ "$INCLUDE_PERSONAL" == "true" ]]; then
-        sync_dir $HOME/Pictures/Wallpaper sync/Pictures/Wallpaper sync_HD_default.prf
-        sync_dir $HOME/Pictures/screenshots_keep sync/Pictures/screenshots_keep sync_HD_default.prf
-        sync_dir $HOME/Pictures/profile_pics sync/Pictures/profile_pics sync_HD_default.prf
         sync_dir $HOME/Pictures/Memories/videos sync/Pictures/Memories/videos sync_HD_default.prf
         sync_dir $HOME/Pictures/Memories/childhood sync/Pictures/Memories/childhood sync_HD_default.prf
         sync_dir $HOME/Pictures/Memories/Pre-2018 sync/Pictures/Memories/Pre-2018 sync_HD_default.prf
@@ -553,11 +550,15 @@ if [[ "$PICTURES" == "true" ]]; then
         # sync_dir $HOME/Pictures/Memories/2021 sync/Pictures/Memories/2021 # does not exist...
         sync_dir $HOME/Pictures/Memories/2022 sync/Pictures/Memories/2022 sync_HD_default.prf
         sync_dir $HOME/Pictures/Memories/2023 sync/Pictures/Memories/2023 sync_HD_default.prf
+
+        sync_dir $HOME/Pictures/Wallpaper sync/Pictures/Wallpaper sync_HD_default.prf
+        sync_dir $HOME/Pictures/screenshots_keep sync/Pictures/screenshots_keep sync_HD_default.prf
     fi
 
     sync_dir $HOME/Pictures/Memories/2024 Pictures/Memories/2024 sync_HD_default.prf
     sync_dir $HOME/Pictures/Memories/2025 Pictures/Memories/2025 sync_HD_default.prf
 
+    sync_dir $HOME/Pictures/profile_pics sync/Pictures/profile_pics sync_HD_default.prf
 fi
 
 if [[ "$PERSONAL_DOCS" == "true" ]]; then
@@ -565,6 +566,7 @@ if [[ "$PERSONAL_DOCS" == "true" ]]; then
         sync_dir $HOME/Documents sync/Documents sync_HD_default.prf
     else
         sync_dir $HOME/Documents/important sync/Documents/important sync_HD_default.prf
+        sync_dir $HOME/Documents/swift_stuff sync/Documents/swift_stuff sync_HD_default.prf
     fi
 fi
 
@@ -582,7 +584,12 @@ if [[ "$STORAGE" == "true" ]]; then
         exit 1
     fi
 
-    sync_dir $HOME/storage sync/storage sync_HD_default.prf
+    LOCALDIR=$HOME/storage
+    if [[ "$DO_LENOVO_LEGION" == "true" ]]; then
+        LOCALDIR=/run/media/InternalHD/storage
+    fi
+
+    sync_dir "$LOCALDIR" sync/storage sync_HD_default.prf
 fi
 
 
