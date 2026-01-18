@@ -1,12 +1,12 @@
 #!/bin/bash
 
-##############################################
+###############################################################
 #
 # Script to sync up files to external HD.
 # Syncs up back-and-forth between stuff on the HD,
 # and stuff on the local machine.
 #
-##############################################
+###############################################################
 
 
 errmsg="
@@ -14,55 +14,53 @@ Sync up all directories hardcoded in this script onto hard drives,
 whose paths are also hardcoded in this script.
 
 usage:
-    $ syncHD.sh [dirflags]           backs up all directories hardcoded in this script,
-                                     unless [dirflags] specifies which directires to sync.
-                                     See documentation of [dirflags] below
+    $ syncHD.sh direction dirflags
 
-    $ syncHD.sh  -h                  show this message and quit
-                 --help
+    $ syncHD.sh  -h, --help          show this message and quit
 
-    $ syncHD.sh  -owl [dirflags]     Don't syncronize to and from the HD backups, but
-                 --overwrite-local   forcibly overwrite LOCAL STATE with what's on the HD
 
-    $ syncHD.sh  -owh [dirflags]     Don't syncronize to and from the HD backups, but
-                 --overwrite-hd      forcibly overwrite HD STATE with what's on the local
-                                     machine
+    direction: specifies direction of sync. Possible values:
+
+    -s, --sync                       Bi-directional sync
+    -owl, --overwrite-local          forcibly overwrite LOCAL STATE with what's on the HD
+    -owh, --overwrite-hd             forcibly overwrite HD STATE with what's on the local machine
 
     dirflags: make (selection of) directories to sync:
 
-    -a, --all                        Sync all (hardcoded) dirs
+    -a, --all                        Sync all (hardcoded) dirs. Equivalent to --work --personal --storage
     -w, --work                       Sync (all) work dirs. Equivalent to --workdocs --zotero --calibre
-    -p, --personal                   Sync (all) private dirs
+    -p, --personal                   Sync (all) private dirs. Equivalent to --docs --pics --ao3
+
     --docs                           Sync private documents
     --pics, --pictures               Sync pictures
     --ao3                            Sync ao3 stuff
     --workdocs                       Sync work documents
     --zotero                         Sync zotero dir
     --calibre                        Sync calibre dir
-
-    --docs-archive      Sync archive document dirs (not included in -w, -a, -p flags)
-    --work-archive      Sync work archive dirs (not included in -w, -a, -p flags)
-    --mail-archive      Sync mail archive dirs (not included in -w, -a, -p flags)
+    --storage                        Sync 'storage' dirs
 "
 
 
 
 
-#------------------------------------------------------------------------
-# Synchronize a single directory (recursively) back and forth between
+#---------------------------------------------------------------------------------------
+# Top level call to synchronize a single directory (recursively) back and forth between
 # the HD and local machine.
+# Calls `sync_dir_unison` if we're using unison (bi-directional sync) or `sync_dir_rsync`
+# if we're using directional sync.
 #
 # Usage:
-#   sync_dir LOCALDIR HDDIR [--exclude=dir1, --exclude=dir2, ...]
+#   sync_dir LOCALDIR HDDIR UNISON_PROFILE [--exclude=dir1, --exclude=dir2, ...]
 #
 # LOCALDIR :       directory on your local machine
 # HDDIR :          directory on your HD
+# UNISON_PROFILE:  which `unison` profile to use.
 # --exclude=dir :  optional strings to add to the rsync call to exclude
 #                  whatever you want excluded. The paths may be relative
-#                  to LOCALDIR and HDDIR.
-#------------------------------------------------------------------------
+#                  to LOCALDIR and HDDIR. Only passed to rsync, i.e. for
+#                  directional sync.
+#---------------------------------------------------------------------------------------
 sync_dir() {
-
 
     if [ -z ${HDPATH+x} ]; then
         echo "Didn't find HDPATH variable."
@@ -76,16 +74,18 @@ sync_dir() {
     fi
 
     # check passed arguments.
-    if [[ "$#" -lt 2 ]]; then
-        echo "sync_dir(): no arguments given. Can't handle that."
-        exit
+    if [[ "$#" -lt 3 ]]; then
+        echo "sync_dir(): not enough arguments given. Can't handle that."
+        echo $0 $1 $2 $3 $4
+        exit 1
     fi
 
-    # read in passed arguments.
-    # reminder: $0 is script's own name, not function name.
     LOCALDIR=$1
     HDDIR=$2
-
+    UNISON_PROFILE=$3
+    shift
+    shift
+    shift
 
     # make full proper paths
     if [[ "$LOCALDIR" = /* ]]; then
@@ -108,16 +108,78 @@ sync_dir() {
     LOCALDIR=${LOCALDIR%/}
     LOCALDIR=${LOCALDIR%/}
 
+    # someplace to store the logs
+    mkdir -p $PWD/logs
+
     # Check that directories in fact exist.
     if [ ! -d "$HDDIR" ]; then
-        echo "Target directory on HD not found. Target is '"$HDDIR"', HDPATH is '"$HDPATH"'"
-        exit 1
+        echo "WARNING: Target directory on HD not found. Target is '"$HDDIR"', HDPATH is '"$HDPATH"'"
+        while true; do
+            read -p "Create it? (y/n) " yn
+            case $yn in
+              [Yy]* ) mkdir -p "$HDDIR"; break;;
+              [Nn]* ) echo "exiting."; exit;;
+              * ) echo "Please answer yes or no.";;
+            esac
+        done
     fi
+
     if [ ! -d "$LOCALDIR" ]; then
         echo "Target directory on LOCAL not found. Target is '"$LOCALDIR"'"
+        while true; do
+            read -p "Create it? (y/n) " yn
+            case $yn in
+              [Yy]* ) mkdir -p "$LOCALDIR"; break;;
+              [Nn]* ) echo "exiting."; exit;;
+              * ) echo "Please answer yes or no.";;
+            esac
+        done
+    fi
+
+
+    # select appropriate sync tool.
+
+    if [[ "$BISYNC" == "yes" ]]; then
+        sync_dir_unison "$LOCALDIR" "$HDDIR" "$UNISON_PROFILE"
+    else
+        additional_args=""
+        while [[ $# > 0 ]]; do
+            additional_args="$additional_args"" $1"
+            shift
+        done
+
+        sync_dir_rsync "$LOCALDIR" "$HDDIR" $additional_args
+    fi
+}
+
+
+sync_dir_unison(){
+
+    if [[ "$BISYNC" != "yes" ]]; then
+        echo Wrong branch in sync_dir_unison
         exit 1
     fi
 
+    # read in passed arguments.
+    # reminder: $0 is script's own name, not function name.
+    LOCALDIR=$1
+    HDDIR=$2
+    UNISON_PROFILE=$3
+
+    DATE=`date +%F_%Hh%M` # current time
+    bname=`basename $LOCALDIR`
+
+    unison "$UNISON_PROFILE" "$LOCALDIR" "$HDDIR" -logfile=$PWD/logs/unison-"$DATE"-"$bname".log -auto
+
+}
+
+
+
+sync_dir_rsync() {
+    # read in passed arguments.
+    # reminder: $0 is script's own name, not function name.
+    LOCALDIR=$1
+    HDDIR=$2
 
     # shift parameter counter to after HDDIR
     shift
@@ -125,6 +187,7 @@ sync_dir() {
 
     excludestr_rsync_local=""
     excludestr_rsync_HD=""
+
     while [[ $# > 0 ]]; do
 
         ARG="$1"
@@ -152,8 +215,8 @@ sync_dir() {
             # Assume excludes may be relative to source dir
             newarg_local_full="$LOCALDIR"/"$newarg_local_full"
         fi
-        if [ ! -d "$newarg_local_full" ]; then
-            echo "WARNING: Directory to exclude doesn't exist on LOCAL. Passed argument was '"$1"', full path is '"$newarg_local_full"'"
+        if [[ ! -d "$newarg_local_full" && ! -f "$newarg_local_full" ]]; then
+            echo "WARNING: Directory or file to exclude doesn't exist on LOCAL. Passed argument was '"$1"', full path is '"$newarg_local_full"'"
         fi
 
         newarg_HD="${ARG#--exclude=}"
@@ -163,10 +226,9 @@ sync_dir() {
         else
             newarg_HD_full="$HDDIR"/"$newarg_HD_full"
         fi
-        if [ ! -d "$newarg_HD_full" ]; then
-            echo "WARNING: Directory to exclude doesn't exist on HD. Passed argument was '"$1"', full path is '"$newarg_HD_full"'"
+        if [[ ! -d "$newarg_HD_full" && ! -f "$newarg_HD_full" ]]; then
+            echo "WARNING: Directory or file to exclude doesn't exist on HD. Passed argument was '"$1"', full path is '"$newarg_HD_full"'"
         fi
-
 
         excludestr_rsync_local="$excludestr_rsync_local ""--exclude=$newarg_local/**"" --exclude=$newarg_local "
         excludestr_rsync_HD="$excludestr_rsync_HD ""--exclude=$newarg_HD/**"" --exclude=$newarg_HD "
@@ -174,7 +236,6 @@ sync_dir() {
     done
 
     DATE=`date +%F_%Hh%M` # current time
-    mkdir -p logs
 
     RSYNC_CMD="rsync    --archive \
                         --verbose \
@@ -214,7 +275,9 @@ sync_dir() {
                         --exclude=**/lost+found*/ \
                         --exclude=**/*Trash*/ \
                         --exclude=**/*trash*/ \
-                        --exclude=**/.gvfs/ "
+                        --exclude=**/.gvfs/ \
+                        --exclude=**/__pycache__ \
+                        --exclude=*.pyc "
 
     RSYNC_CMD=${RSYNC_CMD}${RSYNC_CMD_DEFAULT_EXCLUDES}
     RSYNC_CMD_DELETE_FIRST=${RSYNC_CMD_DELETE_FIRST}${RSYNC_CMD_DEFAULT_EXCLUDES}
@@ -253,19 +316,9 @@ sync_dir() {
         $RSYNC_CMD_DELETE_FIRST $excludestr_rsync_local --log-file=logs/rsync-L2HD-overwrite-"$DATE"".log" "$LOCALDIR"/ "$HDDIR"
 
     else
-        # Sync LOCAL to HD
-        echo "==================================================================================="
-        echo "TRANSFERING" $LOCALDIR " --> "  $HDDIR
-        echo "==================================================================================="
-        $RSYNC_CMD $excludestr_rsync_local --log-file=logs/rsync-L2HD-"$DATE"".log" "$LOCALDIR"/ "$HDDIR"
-        # Sync HD to LOCAL
-        echo "==================================================================================="
-        echo "TRANSFERING" $HDDIR " --> "  $LOCALDIR
-        echo "==================================================================================="
-        $RSYNC_CMD $excludestr_rsync_HD --log-file=logs/rsync-HD2L-"$DATE"".log" "$HDDIR"/ "$LOCALDIR"
+        # BISYNC is done with unison.
+        echo "Invalid branch in sync_dir_rsync - we shouldn't be here."
     fi
-
-
 }
 
 
@@ -283,8 +336,9 @@ sync_dir() {
 
 OVERWRITE_LOCAL="no"
 OVERWRITE_HD="no"
+BISYNC="no"
 
-ALL="true"
+ALL="false"
 WORK="false"
 PERSONAL="false"
 PERSONAL_DOCS="false"
@@ -293,9 +347,7 @@ AO3="false"
 WORKDOCS="false"
 ZOTERO="false"
 CALIBRE="false"
-WORK_ARCHIVE="false"
-MAIL_ARCHIVE="false"
-DOCS_ARCHIVE="false"
+STORAGE="false"
 
 
 
@@ -319,63 +371,49 @@ while [[ $# > 0 ]]; do
             echo "Will overwrite HD STATE instead of syncing"
         ;;
 
+        -s | --sync)
+            BISYNC="yes"
+            echo "Will do bi-directional sync."
+        ;;
+
         -a | --all)
             ALL="true"
         ;;
 
         -w | --work)
             WORK="true"
-            ALL="false"
         ;;
 
         -p | --personal)
             PERSONAL="true"
-            ALL="false"
         ;;
 
         --docs)
             PERSONAL_DOCS="true"
-            ALL="false"
         ;;
 
         --pics | --pictures)
             PICTURES="true"
-            ALL="false"
         ;;
 
         --ao3)
             AO3="true"
-            ALL="false"
         ;;
 
         --workdocs)
             WORKDOCS="true"
-            ALL="false"
         ;;
 
         --zotero)
             ZOTERO="true"
-            ALL="false"
         ;;
 
         --calibre)
             CALIBRE="true"
-            ALL="false"
         ;;
 
-        --work-archive)
-            WORK_ARCHIVE="true"
-            ALL="false"
-        ;;
-
-        --mail-archive)
-            MAIL_ARCHIVE="true"
-            ALL="false"
-        ;;
-
-        --docs-archive)
-            DOCS_ARCHIVE="true"
-            ALL="false"
+        --storage)
+            STORAGE="true"
         ;;
 
 
@@ -397,10 +435,12 @@ done
 # --------------------
 HOST=`hostname`
 HOSTNAME_LENOVO_THINKPAD="mladen-lenovoThinkpad"
+HOSTNAME_LENOVO_LEGION="mivkov-lenovo-legion"
 HOSTNAME_HP_PROBOOK="mivkov-hpprobook"
 
 DO_LENOVO_THINKPAD="false"
 DO_HP_PROBOOK="false"
+DO_LENOVO_LEGION="false"
 
 case $HOST in
   $HOSTNAME_LENOVO_THINKPAD )
@@ -408,6 +448,9 @@ case $HOST in
   ;;
   $HOSTNAME_HP_PROBOOK )
     DO_HP_PROBOOK="true"
+  ;;
+  $HOSTNAME_LENOVO_LEGION )
+    DO_LENOVO_LEGION="true"
   ;;
   *)
     echo "Unrecognized hostname. Adapt script before you break things."
@@ -422,29 +465,58 @@ esac
 #------------------------------------------------------------------------
 # Determine which hard drive to sync with.
 # Choices are hardcoded in here.
-# TODO: Make sure this fails and exits if no HDPATH is found.
+#
+# @MLADEN: NOTE: Make sure this fails and exits if no HDPATH is found.
 # Otherwise, the subsequent rsync calls are going to do stupid things.
 #
-# @Mladen: Note that this sync doesn't require encrypted drives.
+# @MLADEN: NOTE that this sync doesn't require encrypted drives.
 #------------------------------------------------------------------------
 HOMEDIR_BASENAME=`basename $HOME`
-HDPATH="/run/media/$HOMEDIR_BASENAME/WD free/"
-# This is the "home" HD. Include private/personal documents in the sync.
-INCLUDE_PRIVATE="yes"
+HDPATH="/run/media/$HOMEDIR_BASENAME/WD_free"
 
 if [ ! -d "$HDPATH" ]; then
-    echo "Din't find target dir '"$HDPATH"', trying second option"
-    HDPATH="/media/$HOMEDIR_BASENAME/archive/"
-    if [ ! -d "$HDPATH" ]; then
-        echo "Din't find target dir" $HDPATH
-        exit 1
-    fi
-    # This is the "work" HD. Don't include private/personal documents in the sync.
-    INCLUDE_PRIVATE="no"
+    # echo "Din't find target dir '"$HDPATH"', trying second option"
+    # HDPATH="/media/$HOMEDIR_BASENAME/archive/"
+    # if [ ! -d "$HDPATH" ]; then
+    #     echo "Din't find target dir" $HDPATH
+    #     exit 1
+    # fi
+    echo "Din't find target dir" $HDPATH
+    exit 1
 fi
 
 
 
+# Set appropriate variables from shortcuts/collective flags
+
+if [[ "$ALL" == "true" ]]; then
+    WORKDOCS="true"
+    ZOTERO="true"
+    CALIBRE="true"
+    PICTURES="true"
+    PERSONAL_DOCS="true"
+    AO3="true"
+    STORAGE="true"
+fi
+
+if [[ "$WORK" == "true" ]]; then
+    WORKDOCS="true"
+    ZOTERO="true"
+    CALIBRE="true"
+fi
+
+if [[ "$PERSONAL" == "true" ]]; then
+    PICTURES="true"
+    PERSONAL_DOCS="true"
+    AO3="true"
+fi
+
+
+# are we including personal files?
+INCLUDE_PERSONAL="false"
+if [[ "$DO_LENOVO_THINKPAD" == "true" || "$DO_LENOVO_LEGION" == "true" ]]; then
+    INCLUDE_PERSONAL="true"
+fi
 
 
 
@@ -456,123 +528,62 @@ fi
 
 
 # note: everything past the 2nd arg is to be excluded
-if [[ "$WORK" == "true" || "$ALL" == "true" ]]; then
-    sync_dir $HOME/Work sync/Work
-    sync_dir $HOME/Zotero sync/Zotero
-    sync_dir $HOME/calibre_library sync/calibre_library
-else
-    if [[ "$WORKDOCS" == "true" ]]; then
-        sync_dir $HOME/Work sync/Work
-    fi
-    if [[ "$ZOTERO" == "true" ]]; then
-        sync_dir $HOME/Zotero sync/Zotero
-    fi
-    if [[ "$CALIBRE" == "true" ]]; then
-        sync_dir $HOME/calibre_library sync/calibre_library
-    fi
+if [[ "$WORKDOCS" == "true" ]]; then
+    sync_dir $HOME/Work sync/Work sync_HD_default.prf
+fi
+if [[ "$ZOTERO" == "true" ]]; then
+    sync_dir $HOME/Zotero sync/Zotero sync_HD_default.prf
+fi
+if [[ "$CALIBRE" == "true" ]]; then
+    sync_dir $HOME/calibre_library sync/calibre_library sync_HD_default.prf
 fi
 
 
-# $INCLUDE_PRIVATE is determined by whether we're syncing to "home" HD or "work" HD
-if [[ "$INCLUDE_PRIVATE" = "yes" ]]; then
+if [[ "$PICTURES" == "true" ]]; then
+    if [[ "$INCLUDE_PERSONAL" == "true" ]]; then
+        sync_dir $HOME/Pictures/Wallpaper sync/Pictures/Wallpaper sync_HD_default.prf
+        sync_dir $HOME/Pictures/screenshots_keep sync/Pictures/screenshots_keep sync_HD_default.prf
+        sync_dir $HOME/Pictures/profile_pics sync/Pictures/profile_pics sync_HD_default.prf
+        sync_dir $HOME/Pictures/Memories/videos sync/Pictures/Memories/videos sync_HD_default.prf
+        sync_dir $HOME/Pictures/Memories/childhood sync/Pictures/Memories/childhood sync_HD_default.prf
+        sync_dir $HOME/Pictures/Memories/Pre-2018 sync/Pictures/Memories/Pre-2018 sync_HD_default.prf
+        sync_dir $HOME/Pictures/Memories/2018 sync/Pictures/Memories/2018 sync_HD_default.prf
+        sync_dir $HOME/Pictures/Memories/2019 sync/Pictures/Memories/2019 sync_HD_default.prf
+        sync_dir $HOME/Pictures/Memories/2020 sync/Pictures/Memories/2020 sync_HD_default.prf
+        # sync_dir $HOME/Pictures/Memories/2021 sync/Pictures/Memories/2021 # does not exist...
+        sync_dir $HOME/Pictures/Memories/2022 sync/Pictures/Memories/2022 sync_HD_default.prf
+        sync_dir $HOME/Pictures/Memories/2023 sync/Pictures/Memories/2023 sync_HD_default.prf
+    fi
 
-    # $PERSONAL determines whether we're syncing personal files.
-    if [[ "$PERSONAL" == "true" || "$ALL" == "true" ]]; then
+    sync_dir $HOME/Pictures/Memories/2024 Pictures/Memories/2024 sync_HD_default.prf
+    sync_dir $HOME/Pictures/Memories/2025 Pictures/Memories/2025 sync_HD_default.prf
 
-        if [[ "$DO_LENOVO_THINKPAD" == "true" ]]; then
+fi
 
-            sync_dir $HOME/Pictures/profile_pics sync/Pictures/profile_pics
-            sync_dir $HOME/Pictures/Memories/videos sync/Pictures/Memories/videos
-            sync_dir $HOME/Pictures/Memories/childhood sync/Pictures/Memories/childhood
-            sync_dir $HOME/Pictures/Memories/Pre-2018 sync/Pictures/Memories/Pre-2018
-            sync_dir $HOME/Pictures/Memories/2018 sync/Pictures/Memories/2018
-            sync_dir $HOME/Pictures/Memories/2019 sync/Pictures/Memories/2019
-            sync_dir $HOME/Pictures/Memories/2020 sync/Pictures/Memories/2020
-            # sync_dir $HOME/Pictures/Memories/2021 sync/Pictures/Memories/2021 # does not exist...
-            sync_dir $HOME/Pictures/Memories/2022 sync/Pictures/Memories/2022
-            sync_dir $HOME/Pictures/Memories/2023 sync/Pictures/Memories/2023
-
-        fi
-
-        sync_dir $HOME/Pictures/Memories/2024 sync/Pictures/Memories/2024
-        sync_dir $HOME/Pictures/Memories/2025 sync/Pictures/Memories/2025
-
-        sync_dir $HOME/Documents/important sync/Documents/important
-        sync_dir $HOME/.ao3statscraper sync/.ao3statscraper --exclude=ao3statscraper.conf.pkl --exclude=ao3statscraper.conf.yml
-
+if [[ "$PERSONAL_DOCS" == "true" ]]; then
+    if [[ "$INCLUDE_PERSONAL" == "true" ]]; then
+        sync_dir $HOME/Documents sync/Documents sync_HD_default.prf
     else
-        # see if we're syncing spcific dirs then
-
-
-        if [[ "$PICTURES" == "true" ]]; then
-            if [[ "$DO_LENOVO_THINKPAD" == "true" ]]; then
-                sync_dir $HOME/Pictures/profile_pics sync/Pictures/profile_pics
-                sync_dir $HOME/Pictures/Memories/videos sync/Pictures/Memories/videos
-                sync_dir $HOME/Pictures/Memories/childhood sync/Pictures/Memories/childhood
-                sync_dir $HOME/Pictures/Memories/Pre-2018 sync/Pictures/Memories/Pre-2018
-                sync_dir $HOME/Pictures/Memories/2018 sync/Pictures/Memories/2018
-                sync_dir $HOME/Pictures/Memories/2019 sync/Pictures/Memories/2019
-                sync_dir $HOME/Pictures/Memories/2020 sync/Pictures/Memories/2020
-                # sync_dir $HOME/Pictures/Memories/2021 sync/Pictures/Memories/2021 # does not exist...
-                sync_dir $HOME/Pictures/Memories/2022 sync/Pictures/Memories/2022
-                sync_dir $HOME/Pictures/Memories/2023 sync/Pictures/Memories/2023
-            fi
-
-            sync_dir $HOME/Pictures/Memories/2024 Pictures/Memories/2024
-            sync_dir $HOME/Pictures/Memories/2025 Pictures/Memories/2025
-
-        fi
-
-
-        if [[ "$PERSONAL_DOCS" == "true" ]]; then
-            sync_dir $HOME/Documents/important sync/Documents/important
-        fi
-
-        if [[ "$AO3" == "true" ]]; then
-            sync_dir $HOME/.ao3statscraper sync/.ao3statscraper --exclude=ao3statscraper.conf.pkl --exclude=ao3statscraper.conf.yml
-        fi
-
-    fi # syncing personal documents
-
-fi # syncinc to home HD
-
-
-
-if [[ "$WORK_ARCHIVE" == "true" ]]; then
-
-    if [[ "$DO_HP_PROBOOK" == "true" ]]; then
-        echo "Are you sure you're on the right machine???"
-        exit
+        sync_dir $HOME/Documents/important sync/Documents/important sync_HD_default.prf
     fi
+fi
 
-    sync_dir $HOME/Documents/archive_work sync/archives/archive_work
+if [[ "$AO3" == "true" ]]; then
+    sync_dir $HOME/.ao3statscraper sync/.ao3statscraper sync_HD_ao3.prf --exclude=ao3statscraper.conf.pkl --exclude=ao3statscraper.conf.yml
 fi
 
 
-if [[ "$DOCS_ARCHIVE" == "true" ]]; then
+
+if [[ "$STORAGE" == "true" ]]; then
 
     if [[ "$DO_HP_PROBOOK" == "true" ]]; then
+        echo "Trying to backup storage dirs."
         echo "Are you sure you're on the right machine???"
-        exit
+        exit 1
     fi
 
-    sync_dir $HOME/Documents/archive_docs sync/archives/archive_docs
-
+    sync_dir $HOME/storage sync/storage sync_HD_default.prf
 fi
-
-
-if [[ "$MAIL_ARCHIVE" == "true" ]]; then
-
-    if [[ "$DO_HP_PROBOOK" == "true" ]]; then
-        echo "Are you sure you're on the right machine???"
-        exit
-    fi
-
-    sync_dir $HOME/Documents/archive_mail sync/archives/archive_mail
-
-fi
-
-
 
 
 echo DONE.
