@@ -14,30 +14,30 @@ Sync up all directories hardcoded in this script onto hard drives,
 whose paths are also hardcoded in this script.
 
 usage:
-    $ syncHD.sh direction dirflags
+  $ syncHD.sh direction dirflags
 
-    $ syncHD.sh  -h, --help          show this message and quit
+  $ syncHD.sh  -h, --help          show this message and quit
 
 
-    direction: specifies direction of sync. Possible values:
+  direction: specifies direction of sync. Possible values:
 
-    -s, --sync                       Bi-directional sync
-    -owl, --overwrite-local          forcibly overwrite LOCAL STATE with what's on the HD
-    -owh, --overwrite-hd             forcibly overwrite HD STATE with what's on the local machine
+  -s, --sync                       Bi-directional sync
+  -owl, --overwrite-local          forcibly overwrite LOCAL STATE with what's on the HD
+  -owh, --overwrite-hd             forcibly overwrite HD STATE with what's on the local machine
 
-    dirflags: make (selection of) directories to sync:
+  dirflags: make (selection of) directories to sync:
 
-    -a, --all                        Sync all (hardcoded) dirs. Equivalent to --work --personal --storage
-    -w, --work                       Sync (all) work dirs. Equivalent to --workdocs --zotero --calibre
-    -p, --personal                   Sync (all) private dirs. Equivalent to --docs --pics --ao3
+  -a, --all                        Sync all (hardcoded) dirs. Equivalent to --work --personal --storage
+  -w, --work                       Sync (all) work dirs. Equivalent to --workdocs --zotero --calibre
+  -p, --personal                   Sync (all) private dirs. Equivalent to --docs --pics --ao3
 
-    --docs                           Sync private documents
-    --pics, --pictures               Sync pictures
-    --ao3                            Sync ao3 stuff
-    --workdocs                       Sync work documents
-    --zotero                         Sync zotero dir
-    --calibre                        Sync calibre dir
-    --storage                        Sync 'storage' dirs
+  --docs                           Sync private documents
+  --pics, --pictures               Sync pictures
+  --ao3                            Sync ao3 stuff
+  --workdocs                       Sync work documents
+  --zotero                         Sync zotero dir
+  --calibre                        Sync calibre dir
+  --storage                        Sync 'storage' dirs
 "
 
 
@@ -62,263 +62,263 @@ usage:
 #---------------------------------------------------------------------------------------
 sync_dir() {
 
-    if [ -z ${HDPATH+x} ]; then
-        echo "Didn't find HDPATH variable."
-        echo 'Needs to be set before this command is called.'
-        exit 1
-    fi
+  if [ -z ${HDPATH+x} ]; then
+    echo "Didn't find HDPATH variable."
+    echo 'Needs to be set before this command is called.'
+    exit 1
+  fi
 
-    # better safe than sorry.
-    if [ ! -d "$HDPATH" ]; then
-        echo "HDPATH '"$HDPATH"' isn't a directory. Quitting."
-    fi
+  # better safe than sorry.
+  if [ ! -d "$HDPATH" ]; then
+    echo "HDPATH '"$HDPATH"' isn't a directory. Quitting."
+  fi
 
-    # check passed arguments.
-    if [[ "$#" -lt 3 ]]; then
-        echo "sync_dir(): not enough arguments given. Can't handle that."
-        echo $0 $1 $2 $3 $4
-        exit 1
-    fi
+  # check passed arguments.
+  if [[ "$#" -lt 3 ]]; then
+    echo "sync_dir(): not enough arguments given. Can't handle that."
+    echo $0 $1 $2 $3 $4
+    exit 1
+  fi
 
-    LOCALDIR=$1
-    HDDIR=$2
-    UNISON_PROFILE=$3
-    shift
-    shift
-    shift
+  LOCALDIR=$1
+  HDDIR=$2
+  UNISON_PROFILE=$3
+  shift
+  shift
+  shift
 
-    # make full proper paths
-    if [[ "$LOCALDIR" = /* ]]; then
-        : # this should be a full path. `:` means do nothing.
-    else
-        LOCALDIR="$PWD"/"$LOCALDIR"
-    fi
-    if [[ "$HDDIR" = /* ]]; then
-        : # this should be a full path. `:` means do nothing.
-    else
-        HDDIR="$HDPATH"/"$HDDIR"
-    fi
+  # make full proper paths
+  if [[ "$LOCALDIR" = /* ]]; then
+    : # this should be a full path. `:` means do nothing.
+  else
+      LOCALDIR="$PWD"/"$LOCALDIR"
+  fi
+  if [[ "$HDDIR" = /* ]]; then
+    : # this should be a full path. `:` means do nothing.
+  else
+    HDDIR="$HDPATH"/"$HDDIR"
+  fi
 
-    # make sure the dirs don't have trailing slashes. This modifies
-    # rsync behaviour.
-    # Run it twice in case someone has stupid ideas.
+  # make sure the dirs don't have trailing slashes. This modifies
+  # rsync behaviour.
+  # Run it twice in case someone has stupid ideas.
 
-    HDDIR=${HDDIR%/}
-    HDDIR=${HDDIR%/}
-    LOCALDIR=${LOCALDIR%/}
-    LOCALDIR=${LOCALDIR%/}
+  HDDIR=${HDDIR%/}
+  HDDIR=${HDDIR%/}
+  LOCALDIR=${LOCALDIR%/}
+  LOCALDIR=${LOCALDIR%/}
 
-    # someplace to store the logs
-    mkdir -p $PWD/logs
+  # someplace to store the logs
+  mkdir -p $PWD/logs
 
-    # Check that directories in fact exist.
-    if [ ! -d "$HDDIR" ]; then
-        echo "WARNING: Target directory on HD not found. Target is '"$HDDIR"', HDPATH is '"$HDPATH"'"
-        while true; do
-            read -p "Create it? (y/n) " yn
-            case $yn in
-              [Yy]* ) mkdir -p "$HDDIR"; break;;
-              [Nn]* ) echo "exiting."; exit;;
-              * ) echo "Please answer yes or no.";;
-            esac
-        done
-    fi
+  # Check that directories in fact exist.
+  if [ ! -d "$HDDIR" ]; then
+    echo "WARNING: Target directory on HD not found. Target is '"$HDDIR"', HDPATH is '"$HDPATH"'"
+    while true; do
+      read -p "Create it? (y/n) " yn
+      case $yn in
+        [Yy]* ) mkdir -p "$HDDIR"; break;;
+        [Nn]* ) echo "exiting."; exit;;
+        * ) echo "Please answer yes or no.";;
+      esac
+    done
+  fi
 
-    if [ ! -d "$LOCALDIR" ]; then
-        echo "Target directory on LOCAL not found. Target is '"$LOCALDIR"'"
-        while true; do
-            read -p "Create it? (y/n) " yn
-            case $yn in
-              [Yy]* ) mkdir -p "$LOCALDIR"; break;;
-              [Nn]* ) echo "exiting."; exit;;
-              * ) echo "Please answer yes or no.";;
-            esac
-        done
-    fi
+  if [ ! -d "$LOCALDIR" ]; then
+    echo "Target directory on LOCAL not found. Target is '"$LOCALDIR"'"
+    while true; do
+      read -p "Create it? (y/n) " yn
+      case $yn in
+        [Yy]* ) mkdir -p "$LOCALDIR"; break;;
+        [Nn]* ) echo "exiting."; exit;;
+        * ) echo "Please answer yes or no.";;
+      esac
+    done
+  fi
 
 
-    # select appropriate sync tool.
+  # select appropriate sync tool.
 
-    if [[ "$BISYNC" == "yes" ]]; then
-        sync_dir_unison "$LOCALDIR" "$HDDIR" "$UNISON_PROFILE"
-    else
-        additional_args=""
-        while [[ $# > 0 ]]; do
-            additional_args="$additional_args"" $1"
-            shift
-        done
+  if [[ "$BISYNC" == "yes" ]]; then
+    sync_dir_unison "$LOCALDIR" "$HDDIR" "$UNISON_PROFILE"
+  else
+    additional_args=""
+    while [[ $# > 0 ]]; do
+        additional_args="$additional_args"" $1"
+        shift
+    done
 
-        sync_dir_rsync "$LOCALDIR" "$HDDIR" $additional_args
-    fi
+    sync_dir_rsync "$LOCALDIR" "$HDDIR" $additional_args
+  fi
 }
 
 
 sync_dir_unison(){
 
-    if [[ "$BISYNC" != "yes" ]]; then
-        echo Wrong branch in sync_dir_unison
-        exit 1
-    fi
+  if [[ "$BISYNC" != "yes" ]]; then
+      echo Wrong branch in sync_dir_unison
+      exit 1
+  fi
 
-    # read in passed arguments.
-    # reminder: $0 is script's own name, not function name.
-    LOCALDIR=$1
-    HDDIR=$2
-    UNISON_PROFILE=$3
+  # read in passed arguments.
+  # reminder: $0 is script's own name, not function name.
+  LOCALDIR=$1
+  HDDIR=$2
+  UNISON_PROFILE=$3
 
-    DATE=`date +%F_%Hh%M` # current time
-    bname=`basename $LOCALDIR`
+  DATE=`date +%F_%Hh%M` # current time
+  bname=`basename $LOCALDIR`
 
-    unison "$UNISON_PROFILE" "$LOCALDIR" "$HDDIR" -logfile=$PWD/logs/unison-"$DATE"-"$bname".log -auto
+  unison "$UNISON_PROFILE" "$LOCALDIR" "$HDDIR" -logfile=$PWD/logs/unison-"$DATE"-"$bname".log -auto
 
 }
 
 
 
 sync_dir_rsync() {
-    # read in passed arguments.
-    # reminder: $0 is script's own name, not function name.
-    LOCALDIR=$1
-    HDDIR=$2
+  # read in passed arguments.
+  # reminder: $0 is script's own name, not function name.
+  LOCALDIR=$1
+  HDDIR=$2
 
-    # shift parameter counter to after HDDIR
-    shift
-    shift
+  # shift parameter counter to after HDDIR
+  shift
+  shift
 
-    excludestr_rsync_local=""
-    excludestr_rsync_HD=""
+  excludestr_rsync_local=""
+  excludestr_rsync_HD=""
 
-    while [[ $# > 0 ]]; do
+  while [[ $# > 0 ]]; do
 
-        ARG="$1"
+    ARG="$1"
 
-        case "$ARG" in
+    case "$ARG" in
 
-            "--exclude="* )
-                : # ':' means do nothing
-            ;;
+      "--exclude="* )
+        : # ':' means do nothing
+      ;;
 
-            *)
-                "sync_dir(): Unrecognized argument '""$ARG""'"
-            exit 1
+      *)
+        "sync_dir(): Unrecognized argument '""$ARG""'"
+      exit 1
 
-        esac
-
-
-        # check full proper paths
-        # WARNING: Don't actually use full paths.
-        newarg_local="${ARG#--exclude=}"
-        newarg_local_full="$newarg_local"
-        if [[ "$newarg_local_full" = /* ]]; then
-            : # this should be a full path. `:` means do nothing.
-        else
-            # Assume excludes may be relative to source dir
-            newarg_local_full="$LOCALDIR"/"$newarg_local_full"
-        fi
-        if [[ ! -d "$newarg_local_full" && ! -f "$newarg_local_full" ]]; then
-            echo "WARNING: Directory or file to exclude doesn't exist on LOCAL. Passed argument was '"$1"', full path is '"$newarg_local_full"'"
-        fi
-
-        newarg_HD="${ARG#--exclude=}"
-        newarg_HD_full="$newarg_local"
-        if [[ "$newarg_HD_full" = /* ]]; then
-            : # this should be a full path. `:` means do nothing.
-        else
-            newarg_HD_full="$HDDIR"/"$newarg_HD_full"
-        fi
-        if [[ ! -d "$newarg_HD_full" && ! -f "$newarg_HD_full" ]]; then
-            echo "WARNING: Directory or file to exclude doesn't exist on HD. Passed argument was '"$1"', full path is '"$newarg_HD_full"'"
-        fi
-
-        excludestr_rsync_local="$excludestr_rsync_local ""--exclude=$newarg_local/**"" --exclude=$newarg_local "
-        excludestr_rsync_HD="$excludestr_rsync_HD ""--exclude=$newarg_HD/**"" --exclude=$newarg_HD "
-        shift
-    done
-
-    DATE=`date +%F_%Hh%M` # current time
-
-    RSYNC_CMD="rsync    --archive \
-                        --verbose \
-                        --human-readable \
-                        --progress \
-                        --stats \
-                        --update \
-                        --recursive \
-                        "
-
-    RSYNC_CMD_DELETE_FIRST="rsync   --archive \
-                                    --verbose \
-                                    --human-readable \
-                                    --progress \
-                                    --stats \
-                                    --update \
-                                    --recursive \
-                                    --delete \
-                                    "
-
-    RSYNC_CMD_DELETE_FIRST_DRY_RUN="rsync   --archive \
-                                            --human-readable \
-                                            --recursive \
-                                            --verbose \
-                                            --stats \
-                                            --update \
-                                            --delete \
-                                            --dry-run \
-                                            "
+    esac
 
 
-    RSYNC_CMD_DEFAULT_EXCLUDES="
-                        --exclude=**/*tmp*/ \
-                        --exclude=**/*cache*/ \
-                        --exclude=**/*Cache*/ \
-                        --exclude=**~ \
-                        --exclude=**/lost+found*/ \
-                        --exclude=**/*Trash*/ \
-                        --exclude=**/*trash*/ \
-                        --exclude=**/.gvfs/ \
-                        --exclude=**/__pycache__ \
-                        --exclude=*.pyc "
-
-    RSYNC_CMD=${RSYNC_CMD}${RSYNC_CMD_DEFAULT_EXCLUDES}
-    RSYNC_CMD_DELETE_FIRST=${RSYNC_CMD_DELETE_FIRST}${RSYNC_CMD_DEFAULT_EXCLUDES}
-
-
-    if [ "$OVERWRITE_LOCAL" == "yes" ]; then
-        echo "==================================================================================="
-        echo "OVERWRITING" $LOCALDIR " with "  $HDDIR
-        echo "==================================================================================="
-        $RSYNC_CMD_DELETE_FIRST_DRY_RUN $excludestr_rsync_local "$HDDIR"/ "$LOCALDIR"
-        while true; do
-            read -p "That was a dry run. This will overwrite your LOCAL MACHINE STATE. Do you wish to continue? (y/n) " yn
-            case $yn in
-                [Yy]* ) break;;
-                [Nn]* ) echo "exiting."; return;;
-                * ) echo "Please answer yes or no.";;
-            esac
-        done
-        $RSYNC_CMD_DELETE_FIRST $excludestr_rsync_local --log-file=logs/rsync-HD2L-overwrite-"$DATE"".log" "$HDDIR"/ "$LOCALDIR"
-
-
-    elif [ "$OVERWRITE_HD" == "yes" ]; then
-
-        echo "==================================================================================="
-        echo "OVERWRITING" $HDDIR " with "  $LOCALDIR
-        echo "==================================================================================="
-        $RSYNC_CMD_DELETE_FIRST_DRY_RUN $excludestr_rsync_local "$LOCALDIR"/ "$HDDIR"
-        while true; do
-            read -p "That was a dry run. This will overwrite your HD STATE. Do you wish to continue? (y/n) " yn
-            case $yn in
-                [Yy]* ) break;;
-                [Nn]* ) echo "exiting."; return;;
-                * ) echo "Please answer yes or no.";;
-            esac
-        done
-        $RSYNC_CMD_DELETE_FIRST $excludestr_rsync_local --log-file=logs/rsync-L2HD-overwrite-"$DATE"".log" "$LOCALDIR"/ "$HDDIR"
-
+    # check full proper paths
+    # WARNING: Don't actually use full paths.
+    newarg_local="${ARG#--exclude=}"
+    newarg_local_full="$newarg_local"
+    if [[ "$newarg_local_full" = /* ]]; then
+      : # this should be a full path. `:` means do nothing.
     else
-        # BISYNC is done with unison.
-        echo "Invalid branch in sync_dir_rsync - we shouldn't be here."
+      # Assume excludes may be relative to source dir
+      newarg_local_full="$LOCALDIR"/"$newarg_local_full"
     fi
+    if [[ ! -d "$newarg_local_full" && ! -f "$newarg_local_full" ]]; then
+      echo "WARNING: Directory or file to exclude doesn't exist on LOCAL. Passed argument was '"$1"', full path is '"$newarg_local_full"'"
+    fi
+
+    newarg_HD="${ARG#--exclude=}"
+    newarg_HD_full="$newarg_local"
+    if [[ "$newarg_HD_full" = /* ]]; then
+      : # this should be a full path. `:` means do nothing.
+    else
+      newarg_HD_full="$HDDIR"/"$newarg_HD_full"
+    fi
+    if [[ ! -d "$newarg_HD_full" && ! -f "$newarg_HD_full" ]]; then
+      echo "WARNING: Directory or file to exclude doesn't exist on HD. Passed argument was '"$1"', full path is '"$newarg_HD_full"'"
+    fi
+
+    excludestr_rsync_local="$excludestr_rsync_local ""--exclude=$newarg_local/**"" --exclude=$newarg_local "
+    excludestr_rsync_HD="$excludestr_rsync_HD ""--exclude=$newarg_HD/**"" --exclude=$newarg_HD "
+    shift
+  done
+
+  DATE=`date +%F_%Hh%M` # current time
+
+  RSYNC_CMD="rsync    --archive \
+                      --verbose \
+                      --human-readable \
+                      --progress \
+                      --stats \
+                      --update \
+                      --recursive \
+                      "
+
+  RSYNC_CMD_DELETE_FIRST="rsync   --archive \
+                                  --verbose \
+                                  --human-readable \
+                                  --progress \
+                                  --stats \
+                                  --update \
+                                  --recursive \
+                                  --delete \
+                                  "
+
+  RSYNC_CMD_DELETE_FIRST_DRY_RUN="rsync   --archive \
+                                          --human-readable \
+                                          --recursive \
+                                          --verbose \
+                                          --stats \
+                                          --update \
+                                          --delete \
+                                          --dry-run \
+                                          "
+
+
+  RSYNC_CMD_DEFAULT_EXCLUDES="
+                      --exclude=**/*tmp*/ \
+                      --exclude=**/*cache*/ \
+                      --exclude=**/*Cache*/ \
+                      --exclude=**~ \
+                      --exclude=**/lost+found*/ \
+                      --exclude=**/*Trash*/ \
+                      --exclude=**/*trash*/ \
+                      --exclude=**/.gvfs/ \
+                      --exclude=**/__pycache__ \
+                      --exclude=*.pyc "
+
+  RSYNC_CMD=${RSYNC_CMD}${RSYNC_CMD_DEFAULT_EXCLUDES}
+  RSYNC_CMD_DELETE_FIRST=${RSYNC_CMD_DELETE_FIRST}${RSYNC_CMD_DEFAULT_EXCLUDES}
+
+
+  if [ "$OVERWRITE_LOCAL" == "yes" ]; then
+    echo "==================================================================================="
+    echo "OVERWRITING" $LOCALDIR " with "  $HDDIR
+    echo "==================================================================================="
+    $RSYNC_CMD_DELETE_FIRST_DRY_RUN $excludestr_rsync_local "$HDDIR"/ "$LOCALDIR"
+    while true; do
+      read -p "That was a dry run. This will overwrite your LOCAL MACHINE STATE. Do you wish to continue? (y/n) " yn
+      case $yn in
+        [Yy]* ) break;;
+        [Nn]* ) echo "exiting."; return;;
+        * ) echo "Please answer yes or no.";;
+      esac
+    done
+    $RSYNC_CMD_DELETE_FIRST $excludestr_rsync_local --log-file=logs/rsync-HD2L-overwrite-"$DATE"".log" "$HDDIR"/ "$LOCALDIR"
+
+
+  elif [ "$OVERWRITE_HD" == "yes" ]; then
+
+    echo "==================================================================================="
+    echo "OVERWRITING" $HDDIR " with "  $LOCALDIR
+    echo "==================================================================================="
+    $RSYNC_CMD_DELETE_FIRST_DRY_RUN $excludestr_rsync_local "$LOCALDIR"/ "$HDDIR"
+    while true; do
+      read -p "That was a dry run. This will overwrite your HD STATE. Do you wish to continue? (y/n) " yn
+      case $yn in
+        [Yy]* ) break;;
+        [Nn]* ) echo "exiting."; return;;
+        * ) echo "Please answer yes or no.";;
+      esac
+    done
+    $RSYNC_CMD_DELETE_FIRST $excludestr_rsync_local --log-file=logs/rsync-L2HD-overwrite-"$DATE"".log" "$LOCALDIR"/ "$HDDIR"
+
+  else
+    # BISYNC is done with unison.
+    echo "Invalid branch in sync_dir_rsync - we shouldn't be here."
+  fi
 }
 
 
@@ -352,81 +352,81 @@ STORAGE="false"
 
 
 while [[ $# > 0 ]]; do
-    ARG="$1"
+  ARG="$1"
 
-    case "$ARG" in
+  case "$ARG" in
 
-        -h | --help)
-            echo "$errmsg"
-            exit 0
-        ;;
+    -h | --help)
+      echo "$errmsg"
+      exit 0
+    ;;
 
-        -owl | --overwrite-local)
-            OVERWRITE_LOCAL="yes"
-            echo "Will overwrite LOCAL MACHINE STATE instead of syncing"
-        ;;
+    -owl | --overwrite-local)
+      OVERWRITE_LOCAL="yes"
+      echo "Will overwrite LOCAL MACHINE STATE instead of syncing"
+    ;;
 
-        -owh | --overwrite-hd)
-            OVERWRITE_HD="yes"
-            echo "Will overwrite HD STATE instead of syncing"
-        ;;
+    -owh | --overwrite-hd)
+      OVERWRITE_HD="yes"
+      echo "Will overwrite HD STATE instead of syncing"
+    ;;
 
-        -s | --sync)
-            BISYNC="yes"
-            echo "Will do bi-directional sync."
-        ;;
+    -s | --sync)
+      BISYNC="yes"
+      echo "Will do bi-directional sync."
+    ;;
 
-        -a | --all)
-            ALL="true"
-        ;;
+    -a | --all)
+      ALL="true"
+    ;;
 
-        -w | --work)
-            WORK="true"
-        ;;
+    -w | --work)
+      WORK="true"
+    ;;
 
-        -p | --personal)
-            PERSONAL="true"
-        ;;
+    -p | --personal)
+      PERSONAL="true"
+    ;;
 
-        --docs)
-            PERSONAL_DOCS="true"
-        ;;
+    --docs)
+      PERSONAL_DOCS="true"
+    ;;
 
-        --pics | --pictures)
-            PICTURES="true"
-        ;;
+    --pics | --pictures)
+      PICTURES="true"
+    ;;
 
-        --ao3)
-            AO3="true"
-        ;;
+    --ao3)
+      AO3="true"
+    ;;
 
-        --workdocs)
-            WORKDOCS="true"
-        ;;
+    --workdocs)
+      WORKDOCS="true"
+    ;;
 
-        --zotero)
-            ZOTERO="true"
-        ;;
+    --zotero)
+      ZOTERO="true"
+    ;;
 
-        --calibre)
-            CALIBRE="true"
-        ;;
+    --calibre)
+      CALIBRE="true"
+    ;;
 
-        --storage)
-            STORAGE="true"
-        ;;
+    --storage)
+      STORAGE="true"
+    ;;
 
 
-        * )
-        echo "Unknown cmdline arg '"$ARG"'"
-        echo
-        echo $errmsg
-        exit
-        ;;
+    * )
+      echo "Unknown cmdline arg '"$ARG"'"
+      echo
+      echo $errmsg
+      exit
+    ;;
 
-    esac
+  esac
 
-    shift
+  shift
 done
 
 
@@ -475,14 +475,14 @@ HOMEDIR_BASENAME=`basename $HOME`
 HDPATH="/run/media/$HOMEDIR_BASENAME/WD_free"
 
 if [ ! -d "$HDPATH" ]; then
-    # echo "Din't find target dir '"$HDPATH"', trying second option"
-    # HDPATH="/media/$HOMEDIR_BASENAME/archive/"
-    # if [ ! -d "$HDPATH" ]; then
-    #     echo "Din't find target dir" $HDPATH
-    #     exit 1
-    # fi
-    echo "Din't find target dir" $HDPATH
-    exit 1
+  # echo "Din't find target dir '"$HDPATH"', trying second option"
+  # HDPATH="/media/$HOMEDIR_BASENAME/archive/"
+  # if [ ! -d "$HDPATH" ]; then
+  #     echo "Din't find target dir" $HDPATH
+  #     exit 1
+  # fi
+  echo "Din't find target dir" $HDPATH
+  exit 1
 fi
 
 
@@ -490,32 +490,32 @@ fi
 # Set appropriate variables from shortcuts/collective flags
 
 if [[ "$ALL" == "true" ]]; then
-    WORKDOCS="true"
-    ZOTERO="true"
-    CALIBRE="true"
-    PICTURES="true"
-    PERSONAL_DOCS="true"
-    AO3="true"
-    STORAGE="true"
+  WORKDOCS="true"
+  ZOTERO="true"
+  CALIBRE="true"
+  PICTURES="true"
+  PERSONAL_DOCS="true"
+  AO3="true"
+  STORAGE="true"
 fi
 
 if [[ "$WORK" == "true" ]]; then
-    WORKDOCS="true"
-    ZOTERO="true"
-    CALIBRE="true"
+  WORKDOCS="true"
+  ZOTERO="true"
+  CALIBRE="true"
 fi
 
 if [[ "$PERSONAL" == "true" ]]; then
-    PICTURES="true"
-    PERSONAL_DOCS="true"
-    AO3="true"
+  PICTURES="true"
+  PERSONAL_DOCS="true"
+  AO3="true"
 fi
 
 
 # are we including personal files?
 INCLUDE_PERSONAL="false"
 if [[ "$DO_LENOVO_THINKPAD" == "true" || "$DO_LENOVO_LEGION" == "true" ]]; then
-    INCLUDE_PERSONAL="true"
+  INCLUDE_PERSONAL="true"
 fi
 
 
@@ -527,78 +527,77 @@ fi
 # --------------------------
 
 
-# note: everything past the 2nd arg is to be excluded
 if [[ "$WORKDOCS" == "true" ]]; then
-    sync_dir $HOME/Work sync/Work sync_HD_default.prf
+  sync_dir $HOME/Work sync/Work sync_HD_default.prf
 fi
 if [[ "$ZOTERO" == "true" ]]; then
-    sync_dir $HOME/Zotero sync/Zotero sync_HD_default.prf
+  sync_dir $HOME/Zotero sync/Zotero sync_HD_default.prf
 fi
 if [[ "$CALIBRE" == "true" ]]; then
-    sync_dir $HOME/calibre_library sync/calibre_library sync_HD_default.prf
+  sync_dir $HOME/calibre_library sync/calibre_library sync_HD_default.prf
 fi
 
 
 if [[ "$PICTURES" == "true" ]]; then
-    if [[ "$INCLUDE_PERSONAL" == "true" ]]; then
-        sync_dir $HOME/Pictures/Memories/videos sync/Pictures/Memories/videos sync_HD_default.prf
-        sync_dir $HOME/Pictures/Memories/childhood sync/Pictures/Memories/childhood sync_HD_default.prf
-        sync_dir $HOME/Pictures/Memories/Pre-2018 sync/Pictures/Memories/Pre-2018 sync_HD_default.prf
-        sync_dir $HOME/Pictures/Memories/2018 sync/Pictures/Memories/2018 sync_HD_default.prf
-        sync_dir $HOME/Pictures/Memories/2019 sync/Pictures/Memories/2019 sync_HD_default.prf
-        sync_dir $HOME/Pictures/Memories/2020 sync/Pictures/Memories/2020 sync_HD_default.prf
-        # sync_dir $HOME/Pictures/Memories/2021 sync/Pictures/Memories/2021 # does not exist...
-        sync_dir $HOME/Pictures/Memories/2022 sync/Pictures/Memories/2022 sync_HD_default.prf
-        sync_dir $HOME/Pictures/Memories/2023 sync/Pictures/Memories/2023 sync_HD_default.prf
-        sync_dir $HOME/Pictures/Memories/2024 Pictures/Memories/2024 sync_HD_default.prf
+  if [[ "$INCLUDE_PERSONAL" == "true" ]]; then
+    sync_dir $HOME/Pictures/Memories/videos sync/Pictures/Memories/videos sync_HD_default.prf
+    sync_dir $HOME/Pictures/Memories/childhood sync/Pictures/Memories/childhood sync_HD_default.prf
+    sync_dir $HOME/Pictures/Memories/Pre-2018 sync/Pictures/Memories/Pre-2018 sync_HD_default.prf
+    sync_dir $HOME/Pictures/Memories/2018 sync/Pictures/Memories/2018 sync_HD_default.prf
+    sync_dir $HOME/Pictures/Memories/2019 sync/Pictures/Memories/2019 sync_HD_default.prf
+    sync_dir $HOME/Pictures/Memories/2020 sync/Pictures/Memories/2020 sync_HD_default.prf
+    # sync_dir $HOME/Pictures/Memories/2021 sync/Pictures/Memories/2021 # does not exist...
+    sync_dir $HOME/Pictures/Memories/2022 sync/Pictures/Memories/2022 sync_HD_default.prf
+    sync_dir $HOME/Pictures/Memories/2023 sync/Pictures/Memories/2023 sync_HD_default.prf
+    sync_dir $HOME/Pictures/Memories/2024 Pictures/Memories/2024 sync_HD_default.prf
 
-        sync_dir $HOME/Pictures/Wallpaper sync/Pictures/Wallpaper sync_HD_default.prf
-        sync_dir $HOME/Pictures/screenshots_keep sync/Pictures/screenshots_keep sync_HD_default.prf
-    fi
+    sync_dir $HOME/Pictures/Wallpaper sync/Pictures/Wallpaper sync_HD_default.prf
+    sync_dir $HOME/Pictures/screenshots_keep sync/Pictures/screenshots_keep sync_HD_default.prf
+  fi
 
-    sync_dir $HOME/Pictures/Memories/2025 Pictures/Memories/2025 sync_HD_default.prf
-    sync_dir $HOME/Pictures/Memories/2026 Pictures/Memories/2026 sync_HD_default.prf
+  sync_dir $HOME/Pictures/Memories/2025 Pictures/Memories/2025 sync_HD_default.prf
+  sync_dir $HOME/Pictures/Memories/2026 Pictures/Memories/2026 sync_HD_default.prf
 
-    sync_dir $HOME/Pictures/profile_pics sync/Pictures/profile_pics sync_HD_default.prf
+  sync_dir $HOME/Pictures/profile_pics sync/Pictures/profile_pics sync_HD_default.prf
 fi
 
 if [[ "$PERSONAL_DOCS" == "true" ]]; then
-    if [[ "$INCLUDE_PERSONAL" == "true" ]]; then
-        sync_dir $HOME/Documents sync/Documents sync_HD_default.prf
-    else
-        sync_dir $HOME/Documents/important sync/Documents/important sync_HD_default.prf
-        sync_dir $HOME/Documents/swift_stuff sync/Documents/swift_stuff sync_HD_default.prf
-    fi
+  if [[ "$INCLUDE_PERSONAL" == "true" ]]; then
+    sync_dir $HOME/Documents sync/Documents sync_HD_default.prf
+  else
+    sync_dir $HOME/Documents/important sync/Documents/important sync_HD_default.prf
+    sync_dir $HOME/Documents/swift_stuff sync/Documents/swift_stuff sync_HD_default.prf
+  fi
 fi
 
 if [[ "$AO3" == "true" ]]; then
-    sync_dir $HOME/.ao3statscraper sync/.ao3statscraper sync_HD_ao3.prf --exclude=ao3statscraper.conf.pkl --exclude=ao3statscraper.conf.yml
+  sync_dir $HOME/.ao3statscraper sync/.ao3statscraper sync_HD_ao3.prf --exclude=ao3statscraper.conf.pkl --exclude=ao3statscraper.conf.yml
 fi
 
 
 
 if [[ "$STORAGE" == "true" ]]; then
 
-    if [[ "$DO_HP_PROBOOK" == "true" ]]; then
-        if [[ "$ALL" == "true" ]]; then
-            echo "Trying to backup storage dirs."
-            echo "Are you sure you're on the right machine???"
-        else
-            echo "Trying to backup storage dirs."
-            echo "Are you sure you're on the right machine???"
-            exit 1
-        fi
-
+  if [[ "$DO_HP_PROBOOK" == "true" ]]; then
+    if [[ "$ALL" == "true" ]]; then
+      echo "Trying to backup storage dirs."
+      echo "Are you sure you're on the right machine???"
     else
-
-        LOCALDIR=$HOME/storage
-        if [[ "$DO_LENOVO_LEGION" == "true" ]]; then
-            LOCALDIR=/run/media/InternalHD/storage
-        fi
-
-        sync_dir "$LOCALDIR" sync/storage sync_HD_default.prf
-
+      echo "Trying to backup storage dirs."
+      echo "Are you sure you're on the right machine???"
+      exit 1
     fi
+
+  else
+
+    LOCALDIR=$HOME/storage
+    if [[ "$DO_LENOVO_LEGION" == "true" ]]; then
+        LOCALDIR=/run/media/InternalHD/storage
+    fi
+
+    sync_dir "$LOCALDIR" sync/storage sync_HD_default.prf
+
+  fi
 fi
 
 
