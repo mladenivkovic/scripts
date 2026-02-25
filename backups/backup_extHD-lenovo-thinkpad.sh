@@ -8,11 +8,11 @@
 
 
 ERRMSG='
-backup_extHD-HP.sh - back up your data to external HD.
+backup_extHD-lenovo-thinkpad.sh - back up your data to external HD.
                      Backs up all directories hardcoded in this script.
 
 usage:
-  backup_extHD-HP.sh [dir] [-h] [-m]
+  backup_extHD-lenovo-thinkpad.sh [dir] [-h] [-m]
 
   [dir]         if provided, backs up only given directory, if it is part of
                 hardcoded directories
@@ -71,7 +71,7 @@ echo Writing backup to "$BACKUP_DEST_DIR"
 
 EXCLUDEDIRS="" # Define parent directories that are to be excluded here
 # EXCLUDEDIRS="$EXCLUDEDIRS Audiobooks"
-# EXCLUDEDIRS="$EXCLUDEDIRS Downloads"
+EXCLUDEDIRS="$EXCLUDEDIRS Downloads/torrents"
 # EXCLUDEDIRS="$EXCLUDEDIRS Dropbox"
 # EXCLUDEDIRS="$EXCLUDEDIRS dwhelper"
 EXCLUDEDIRS="$EXCLUDEDIRS Encfs"
@@ -120,7 +120,7 @@ rsync_cmd+=" --archive --verbose --human-readable --progress --stats"
 rsync_cmd+=" --update --recursive --delete --exclude=**/*tmp*/ --exclude=**/*cache*/"
 rsync_cmd+=" --exclude=**/*Cache*/ --exclude=**~ --exclude=/mnt/*/** --exclude=/media/*/**"
 rsync_cmd+=" --exclude=**/lost+found*/ --exclude=**/*Trash*/ --exclude=**/*trash*/"
-rsync_cmd+=" --exclude=**/.gvfs/ --log-file=rsync-backup-HP-""$DATE"".log"
+rsync_cmd+=" --exclude=**/.gvfs/ --log-file=rsync-backup-lenovo-thinkpad-""$DATE"".log"
 rsync_cmd+=" ""$excludestr_rsync"
   # covered by --archive
   #   --recursive \
@@ -219,7 +219,7 @@ if [[ "$MINIMAL" = "true" ]]; then
     #   BACKUP_DEST_DIR += /mivkov/xkcd
 
     echo "---Minimal backup: backing '$BACKUP_SRC_DIR'---"
-    $rsync_cmd "$BACKUP_SRC_DIR" "$BACKUP_DEST_DIR" --log-file=rsync-backup-HP-"$DATE"-"$DIR".log
+    $rsync_cmd "$BACKUP_SRC_DIR" "$BACKUP_DEST_DIR" --log-file=rsync-backup-lenovo-thinkpad-"$DATE"-"$DIR".log
 
   done
   echo "---Minimal backup ended---"
