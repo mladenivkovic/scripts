@@ -571,7 +571,7 @@ if [[ "$PERSONAL_DOCS" == "true" ]]; then
 fi
 
 if [[ "$AO3" == "true" ]]; then
-  sync_dir $HOME/.ao3statscraper sync/.ao3statscraper sync_HD_ao3.prf --exclude=ao3statscraper.conf.pkl --exclude=ao3statscraper.conf.yml
+  sync_dir $HOME/.ao3statscraper sync/.ao3statscraper sync_HD_ao3.prf --exclude=ao3statscraper.conf.pkl --exclude=ao3statscraper.conf.yml --exclude=ao3statscraper.session.pkl
 fi
 
 

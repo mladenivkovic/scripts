@@ -618,6 +618,6 @@ function rclone_cmd() {
 
 
 if [[ "$AO3" == "true" || "$ALL" == "true" ]]; then
-  rclone_cmd $HOME/.ao3statscraper "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/.ao3statscraper --exclude=ao3statscraper.conf.pkl --exclude=ao3statscraper.conf.yml
+  rclone_cmd $HOME/.ao3statscraper "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/.ao3statscraper --exclude=ao3statscraper.conf.pkl --exclude=ao3statscraper.conf.yml --exclude=ao3statscraper.session.pkl
 fi
 
