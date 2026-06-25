@@ -152,6 +152,97 @@ sync_dir() {
   fi
 }
 
+#---------------------------------------------------------------------------------------
+# Same as `sync_dir`, but provide a special target dir to sync to/from.
+#
+# Usage:
+#   sync_dir_full_path_target LOCALDIR FULL_PATH_TO_HDDIR UNISON_PROFILE [--exclude=dir1, --exclude=dir2, ...]
+#
+# LOCALDIR :       directory on your local machine
+# FULL_PATH_TO_HDDIR :  full path to directory (on your HD)
+# UNISON_PROFILE:  which `unison` profile to use.
+# --exclude=dir :  optional strings to add to the rsync call to exclude
+#                  whatever you want excluded. The paths may be relative
+#                  to LOCALDIR and HDDIR. Only passed to rsync, i.e. for
+#                  directional sync.
+#---------------------------------------------------------------------------------------
+sync_dir_full_path_target() {
+
+  # check passed arguments.
+  if [[ "$#" -lt 3 ]]; then
+    echo "sync_dir(): not enough arguments given. Can't handle that."
+    echo $0 $1 $2 $3 $4
+    exit 1
+  fi
+
+  LOCALDIR=$1
+  HDDIR=$2
+  UNISON_PROFILE=$3
+  shift
+  shift
+  shift
+
+  # make full proper paths
+  if [[ "$LOCALDIR" = /* ]]; then
+    : # this should be a full path. `:` means do nothing.
+  else
+      LOCALDIR="$PWD"/"$LOCALDIR"
+  fi
+  if [[ "$HDDIR" = /* ]]; then
+    : # this should be a full path. `:` means do nothing.
+  else
+    echo "'\$HDDIR' should be a full path, you provided '$HDDIR'"
+    exit 1
+  fi
+
+  # make sure the dirs don't have trailing slashes. This modifies
+  # rsync behaviour.
+  # Run it twice in case someone has stupid ideas.
+
+  HDDIR=${HDDIR%/}
+  HDDIR=${HDDIR%/}
+  LOCALDIR=${LOCALDIR%/}
+  LOCALDIR=${LOCALDIR%/}
+
+  # someplace to store the logs
+  mkdir -p $PWD/logs
+
+  # Check that directories in fact exist.
+  if [ ! -d "$HDDIR" ]; then
+    echo "Error: target HDDIR doesn't exist: '"$HDDIR"'"
+    exit 1
+  fi
+
+  if [ ! -d "$LOCALDIR" ]; then
+    echo "Target directory on LOCAL not found. Target is '"$LOCALDIR"'"
+    while true; do
+      read -p "Create it? (y/n) " yn
+      case $yn in
+        [Yy]* ) mkdir -p "$LOCALDIR"; break;;
+        [Nn]* ) echo "exiting."; exit;;
+        * ) echo "Please answer yes or no.";;
+      esac
+    done
+  fi
+
+
+  # select appropriate sync tool.
+
+  if [[ "$BISYNC" == "yes" ]]; then
+    sync_dir_unison "$LOCALDIR" "$HDDIR" "$UNISON_PROFILE"
+  else
+    additional_args=""
+    while [[ $# > 0 ]]; do
+        additional_args="$additional_args"" $1"
+        shift
+    done
+
+    sync_dir_rsync "$LOCALDIR" "$HDDIR" $additional_args
+  fi
+}
+
+
+
 
 sync_dir_unison(){
 
@@ -434,6 +525,7 @@ done
 # Check for hostname.
 # --------------------
 HOST=`hostname`
+HOSTNAME_ASUS_ZENBOOK="mivkov-asuszenbook"
 HOSTNAME_LENOVO_THINKPAD="mladen-lenovoThinkpad"
 HOSTNAME_LENOVO_LEGION="mivkov-lenovo-legion"
 HOSTNAME_HP_PROBOOK="mivkov-hpprobook"
@@ -441,6 +533,7 @@ HOSTNAME_HP_PROBOOK="mivkov-hpprobook"
 DO_LENOVO_THINKPAD="false"
 DO_HP_PROBOOK="false"
 DO_LENOVO_LEGION="false"
+DO_ASUS_ZENBOOK="false"
 
 case $HOST in
   $HOSTNAME_LENOVO_THINKPAD )
@@ -451,6 +544,9 @@ case $HOST in
   ;;
   $HOSTNAME_LENOVO_LEGION )
     DO_LENOVO_LEGION="true"
+  ;;
+  $HOSTNAME_ASUS_ZENBOOK )
+    DO_ASUS_ZENBOOK="true"
   ;;
   *)
     echo "Unrecognized hostname. Adapt script before you break things."
@@ -469,7 +565,8 @@ esac
 # @MLADEN: NOTE: Make sure this fails and exits if no HDPATH is found.
 # Otherwise, the subsequent rsync calls are going to do stupid things.
 #
-# @MLADEN: NOTE that this sync doesn't require encrypted drives.
+# @MLADEN: NOTE that this sync doesn't require encrypted drives EXCEPT
+# for documents.
 #------------------------------------------------------------------------
 HOMEDIR_BASENAME=`basename $HOME`
 HDPATH="/run/media/$HOMEDIR_BASENAME/WD_free"
@@ -514,7 +611,7 @@ fi
 
 # are we including personal files?
 INCLUDE_PERSONAL="false"
-if [[ "$DO_LENOVO_THINKPAD" == "true" || "$DO_LENOVO_LEGION" == "true" ]]; then
+if [[ "$DO_LENOVO_THINKPAD" == "true" || "$DO_LENOVO_LEGION" == "true" || "$DO_ASUS_ZENBOOK" == "true" ]]; then
   INCLUDE_PERSONAL="true"
 fi
 
@@ -565,9 +662,13 @@ if [[ "$PERSONAL_DOCS" == "true" ]]; then
   if [[ "$INCLUDE_PERSONAL" == "true" ]]; then
     sync_dir $HOME/Documents sync/Documents sync_HD_default.prf
   else
-    sync_dir $HOME/Documents/important sync/Documents/important sync_HD_default.prf
     sync_dir $HOME/Documents/swift_stuff sync/Documents/swift_stuff sync_HD_default.prf
   fi
+  if [ ! -d $HOME/Encfs/docs/Documents ]; then
+    echo "Didn't find dir $HOME/Encfs/docs/Documents, did you forget to mount it?"
+    exit 1
+  fi
+  sync_dir_full_path_target $HOME/Documents/important $HOME/Encfs/docs/Documents/important sync_HD_default.prf
 fi
 
 if [[ "$AO3" == "true" ]]; then
