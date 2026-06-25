@@ -22,9 +22,9 @@ usage:
 
 
 
-ROOT_BACKUP_SRC_DIR=$HOME                        # Root dir to backup
-DATE=`date +%F_%Hh%M`                            # current time
-BACKUP_DEST_DIR=/run/media/mivkov/BACKUP_LENOVO  # where to store the backup
+ROOT_BACKUP_SRC_DIR=$HOME                           # Root dir to backup
+DATE=`date +%F_%Hh%M`                               # current time
+BACKUP_DEST_DIR=$HOME/Encfs/BACKUP_LENOVO_THINKPAD  # where to store the backup
 HOMEDIR_BASENAME=`basename $HOME`
 
 
@@ -61,8 +61,8 @@ done
 
 
 if [ ! -d "$BACKUP_DEST_DIR"/$HOMEDIR_BASENAME ]; then
-  echo "Din't find target dir '"$BACKUP_DEST_DIR/$HOMEDIR_BASENAME"', trying second option"
-  # echo "Did you remember to mount the encrypted drives?"
+  echo "Din't find target dir '"$BACKUP_DEST_DIR/$HOMEDIR_BASENAME" '"#, trying second option"
+  echo "Did you remember to mount the encrypted drives?"
   exit 1
 fi
 

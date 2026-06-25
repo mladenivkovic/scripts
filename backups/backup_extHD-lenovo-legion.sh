@@ -65,24 +65,14 @@ if [ ! -d "$BACKUP_DEST_DIR"/$HOMEDIR_BASENAME ]; then
 
   # try the second HDD
   found_dir="false"
-  BACKUP_DEST_DIR=/run/media/mivkov/BACKUP_LENOVO/BACKUP_LENOVO_LEGION  # where to store the backup
+  BACKUP_DEST_DIR=/home/mivkov/Encfs/BACKUP_LENOVO_LEGION_DAVOS/  # where to store the backup
   if [ ! -d "$BACKUP_DEST_DIR/$HOMEDIR_BASENAME" ]; then
     echo "Din't find target dir '"$BACKUP_DEST_DIR/$HOMEDIR_BASENAME"', trying third option"
   else
     found_dir="true"
-  fi
-
-  # try the third HDD
-  if [[ "$found_dir" == "false" ]]; then
-    BACKUP_DEST_DIR=/home/mivkov/Encfs/BACKUP_LENOVO_LEGION_DAVOS/  # where to store the backup
-    if [ ! -d "$BACKUP_DEST_DIR/$HOMEDIR_BASENAME" ]; then
-      echo "Din't find target dir '"$BACKUP_DEST_DIR/$HOMEDIR_BASENAME"', trying fourth option"
-    else
-      found_dir="true"
-      if [[ "$MINIMAL" != "true" ]]; then
-        echo "I thought this HD should only run minimal backups. You sure you know what you're doing?"
-        exit
-      fi
+    if [[ "$MINIMAL" != "true" ]]; then
+      echo "I thought this HD should only run minimal backups. You sure you know what you're doing?"
+      exit
     fi
   fi
 
