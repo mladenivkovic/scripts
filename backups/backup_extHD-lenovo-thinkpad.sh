@@ -61,7 +61,8 @@ done
 
 
 if [ ! -d "$BACKUP_DEST_DIR"/$HOMEDIR_BASENAME ]; then
-  echo "Din't find target dir '"$BACKUP_DEST_DIR/$HOMEDIR_BASENAME" '"#, trying second option"
+  echo "Din't find target dir '""$BACKUP_DEST_DIR/$HOMEDIR_BASENAME""'"
+  #, trying second option
   echo "Did you remember to mount the encrypted drives?"
   exit 1
 fi
