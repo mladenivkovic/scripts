@@ -24,7 +24,7 @@ usage:
 
 ROOT_BACKUP_SRC_DIR=$HOME                      # Root dir to backup
 DATE=`date +%F_%Hh%M`                          # current time
-BACKUP_DEST_DIR=/home/mivkov/Encfs/BACKUP_LENOVO_LEGION/  # where to store the backup
+BACKUP_DEST_DIR=$HOME/Encfs/BACKUP_LENOVO_LEGION  # where to store the backup
 HOMEDIR_BASENAME=`basename $HOME`
 
 
@@ -90,7 +90,6 @@ if [ ! -d "$BACKUP_DEST_DIR"/$HOMEDIR_BASENAME ]; then
     fi
   fi
 
-
 fi
 
 echo Writing backup to "$BACKUP_DEST_DIR"
@@ -147,7 +146,7 @@ rsync_cmd+=" --archive --verbose --human-readable --progress --stats"
 rsync_cmd+=" --update --recursive --delete --exclude=**/*tmp*/ --exclude=**/*cache*/"
 rsync_cmd+=" --exclude=**/*Cache*/ --exclude=**~ --exclude=/mnt/*/** --exclude=/media/*/**"
 rsync_cmd+=" --exclude=**/lost+found*/ --exclude=**/*Trash*/ --exclude=**/*trash*/"
-rsync_cmd+=" --exclude=**/.gvfs/ --log-file=rsync-backup-HP-""$DATE"".log"
+rsync_cmd+=" --exclude=**/.gvfs/ --log-file=rsync-backup-lenovo-legion-""$DATE"".log"
 rsync_cmd+=" ""$excludestr_rsync"
   # covered by --archive
   #   --recursive \
@@ -200,11 +199,15 @@ if [[ "$BACKUP_SRC_DIR" != "#none" ]]; then
 fi
 
 
-MINIMAL_ROOT_SOURCES=" $HOME/Documents "
+MINIMAL_ROOT_SOURCES=" $HOME/coding "
+MINIMAL_ROOT_SOURCES+=" $HOME/Documents "
 MINIMAL_ROOT_SOURCES+=" $HOME/Durham "
 MINIMAL_ROOT_SOURCES+=" $HOME/EPFL "
 MINIMAL_ROOT_SOURCES+=" $HOME/Pictures "
-# MINIMAL_ROOT_SOURCES+=" $HOME/Work "
+MINIMAL_ROOT_SOURCES+=" $HOME/.config "
+MINIMAL_ROOT_SOURCES+=" $HOME/.ssh "
+MINIMAL_ROOT_SOURCES+=" $HOME/Work "
+MINIMAL_ROOT_SOURCES+=" $HOME/Zotero "
 
 
 # if we're doing a "minimal" backup:
@@ -246,7 +249,7 @@ if [[ "$MINIMAL" = "true" ]]; then
     #   BACKUP_DEST_DIR += /mivkov/xkcd
 
     echo "---Minimal backup: backing '$BACKUP_SRC_DIR'---"
-    $rsync_cmd "$BACKUP_SRC_DIR" "$BACKUP_DEST_DIR" --log-file=rsync-backup-HP-"$DATE"-"$DIR".log
+    $rsync_cmd "$BACKUP_SRC_DIR" "$BACKUP_DEST_DIR" --log-file=rsync-backup-lenovo-legion-"$DATE"-"$DIR".log
 
   done
   echo "---Minimal backup ended---"
