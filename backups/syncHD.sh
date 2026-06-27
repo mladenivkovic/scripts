@@ -10,34 +10,34 @@
 
 
 errmsg="
-Sync up all directories hardcoded in this script onto hard drives,\n
-whose paths are also hardcoded in this script.\n
-\n
-usage:\n
-  $ syncHD.sh direction dirflags\n
-\n
-  $ syncHD.sh  -h, --help          show this message and quit\n
-\n
-\n
-  direction: specifies direction of sync. Possible values:\n
-\n
-  -s, --sync                       Bi-directional sync\n
-  -owl, --overwrite-local          forcibly overwrite LOCAL STATE with what's on the HD\n
-  -owh, --overwrite-hd             forcibly overwrite HD STATE with what's on the local machine\n
-\n
-  dirflags: make (selection of) directories to sync:\n
-\n
-  -a, --all                        Sync all (hardcoded) dirs. Equivalent to --work --personal --storage\n
-  -w, --work                       Sync (all) work dirs. Equivalent to --workdocs --zotero --calibre\n
-  -p, --personal                   Sync (all) private dirs. Equivalent to --docs --pics --ao3\n
-\n
-  --docs                           Sync private documents\n
-  --pics, --pictures               Sync pictures\n
-  --ao3                            Sync ao3 stuff\n
-  --workdocs                       Sync work documents\n
-  --zotero                         Sync zotero dir\n
-  --calibre                        Sync calibre dir\n
-  --storage                        Sync 'storage' dirs\n
+Sync up all directories hardcoded in this script onto hard drives,
+whose paths are also hardcoded in this script.
+
+usage:
+  $ syncHD.sh direction dirflags
+
+  $ syncHD.sh  -h, --help          show this message and quit
+
+
+  direction: specifies direction of sync. Possible values:
+
+  -s, --sync                       Bi-directional sync
+  -owl, --overwrite-local          forcibly overwrite LOCAL STATE with what's on the HD
+  -owh, --overwrite-hd             forcibly overwrite HD STATE with what's on the local machine
+
+  dirflags: make (selection of) directories to sync:
+
+  -a, --all                        Sync all (hardcoded) dirs. Equivalent to --work --personal --storage
+  -w, --work                       Sync (all) work dirs. Equivalent to --workdocs --zotero --calibre
+  -p, --personal                   Sync (all) private dirs. Equivalent to --docs --pics --ao3
+
+  --docs                           Sync private documents
+  --pics, --pictures               Sync pictures
+  --ao3                            Sync ao3 stuff
+  --workdocs                       Sync work documents
+  --zotero                         Sync zotero dir
+  --calibre                        Sync calibre dir
+  --storage                        Sync 'storage' dirs
 "
 
 
@@ -447,7 +447,7 @@ while [[ $# > 0 ]]; do
   case "$ARG" in
 
     -h | --help)
-      echo "$errmsg"
+      echo -e "$errmsg"
       exit 0
     ;;
 
