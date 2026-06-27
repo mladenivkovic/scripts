@@ -217,8 +217,8 @@ if [[ "$MINIMAL" = "true" ]]; then
     # now add the additional path of the directory to BACKUP_DEST_DIR
     parent_root_dir="$(dirname $ROOT_BACKUP_SRC_DIR)"
     parent_backup_src_dir="$(dirname $BACKUP_SRC_DIR)"
-    BACKUP_DEST_DIR="$BACKUP_DEST_DIR"/"${parent_backup_src_dir#$parent_root_dir}"
-    mkdir -p "$BACKUP_DEST_DIR"
+    BACKUP_DEST_DIR_USE="$BACKUP_DEST_DIR"/"${parent_backup_src_dir#$parent_root_dir}"
+    mkdir -p "$BACKUP_DEST_DIR_USE"
     # example:
     #   initially:
     #   BACKUP_DEST_DIR = /media/mivkov/backup
@@ -227,7 +227,7 @@ if [[ "$MINIMAL" = "true" ]]; then
     #   change into:
     #   parent_root_dir = /home
     #   parent_dir_to_backup = /home/mivkov/xkcd/ksbd
-    #   BACKUP_DEST_DIR_USE += /mivkov/xkcd
+    #   BACKUP_DEST_DIR_USE += $BACKUP_DEST_DIR/mivkov/xkcd
 
     echo "---Minimal backup: backing '$BACKUP_SRC_DIR'---"
     dirbasename=`basename $DIR`
