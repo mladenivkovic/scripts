@@ -31,8 +31,12 @@ HOMEDIR_BASENAME=`basename $HOME`
 # Handle cmdline args.
 # --------------------
 
-MINIMAL="false"
+MINIMAL="true"
 BACKUP_SRC_DIR="#none"
+
+echo "WARNING: DOING MINIMAL BACKUP BY DEFAULT."
+read -p "Hit any key to continue." yn
+
 
 while [[ $# > 0 ]]; do
   ARG="$1"
@@ -174,11 +178,15 @@ if [[ "$BACKUP_SRC_DIR" != "#none" ]]; then
 fi
 
 
-MINIMAL_ROOT_SOURCES=" $HOME/Documents "
+MINIMAL_ROOT_SOURCES=" $HOME/coding "
+MINIMAL_ROOT_SOURCES+=" $HOME/Documents "
 MINIMAL_ROOT_SOURCES+=" $HOME/Durham "
 MINIMAL_ROOT_SOURCES+=" $HOME/EPFL "
 MINIMAL_ROOT_SOURCES+=" $HOME/Pictures "
-# MINIMAL_ROOT_SOURCES+=" $HOME/Work "
+MINIMAL_ROOT_SOURCES+=" $HOME/.config "
+MINIMAL_ROOT_SOURCES+=" $HOME/.ssh "
+MINIMAL_ROOT_SOURCES+=" $HOME/Work "
+MINIMAL_ROOT_SOURCES+=" $HOME/Zotero "
 
 
 # if we're doing a "minimal" backup:

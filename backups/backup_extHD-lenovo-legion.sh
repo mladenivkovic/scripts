@@ -8,11 +8,11 @@
 
 
 ERRMSG='
-backup_extHD-HP.sh - back up your data to external HD.
+backup_extHD-lenovo-legion.sh - back up your data to external HD.
                      Backs up all directories hardcoded in this script.
 
 usage:
-  backup_extHD-HP.sh [dir] [-h] [-m]
+  backup_extHD-lnovo-legion.sh [dir] [-h] [-m]
 
   [dir]         if provided, backs up only given directory, if it is part of
                 hardcoded directories
@@ -31,8 +31,12 @@ HOMEDIR_BASENAME=`basename $HOME`
 # Handle cmdline args.
 # --------------------
 
-MINIMAL="false"
+MINIMAL="true"
 BACKUP_SRC_DIR="#none"
+
+echo "WARNING: DOING MINIMAL BACKUP BY DEFAULT."
+read -p "Hit any key to continue." yn
+
 
 while [[ $# > 0 ]]; do
   ARG="$1"
