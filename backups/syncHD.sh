@@ -524,7 +524,7 @@ done
 # Check for hostname.
 # --------------------
 HOST=`hostname`
-HOSTNAME_ASUS_ZENBOOK="mivkov-asuszenbook"
+HOSTNAME_ASUS_ZENBOOK="mivkov-asuszenbook14"
 HOSTNAME_LENOVO_THINKPAD="mladen-lenovoThinkpad"
 HOSTNAME_LENOVO_LEGION="mivkov-lenovo-legion"
 HOSTNAME_HP_PROBOOK="mivkov-hpprobook"
