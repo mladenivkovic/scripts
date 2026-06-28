@@ -31,11 +31,11 @@ HOMEDIR_BASENAME=`basename $HOME`
 # Handle cmdline args.
 # --------------------
 
-MINIMAL="true"
+MINIMAL="false"
 BACKUP_SRC_DIR="#none"
 
-echo "WARNING: DOING MINIMAL BACKUP BY DEFAULT."
-read -p "Hit any key to continue." yn
+# echo "WARNING: DOING MINIMAL BACKUP BY DEFAULT."
+# read -p "Hit any key to continue." yn
 
 
 while [[ $# > 0 ]]; do
