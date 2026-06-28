@@ -659,7 +659,7 @@ fi
 
 if [[ "$PERSONAL_DOCS" == "true" ]]; then
   if [[ "$INCLUDE_PERSONAL" == "true" ]]; then
-    # exclude "important" dir; that's handled later
+    # Just sync the entire directory. But exclude "important" dir; that's handled later
     sync_dir $HOME/Documents sync/Documents sync_HD_documents.prf --exclude=important
   else
     # only sync 'swift_stuff' and 'notion_icons' dirs from /Documents
@@ -674,6 +674,7 @@ if [[ "$PERSONAL_DOCS" == "true" ]]; then
   sync_dir_full_path_target $HOME/Documents/important $HOME/Encfs/docs/Documents/important sync_HD_default.prf
 
   sync_dir $HOME/coding/documents sync/coding/documents sync_HD_default.prf
+  sync_dir $HOME/Templates sync/Templates sync_HD_default.prf
 fi
 
 if [[ "$AO3" == "true" ]]; then
