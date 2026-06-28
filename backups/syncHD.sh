@@ -28,7 +28,7 @@ usage:
   dirflags: make (selection of) directories to sync:
 
   -a, --all                        Sync all (hardcoded) dirs. Equivalent to --work --personal --storage
-  -w, --work                       Sync (all) work dirs. Equivalent to --workdocs --zotero --calibre
+  -w, --work                       Sync (all) work dirs. Equivalent to --workdocs --zotero
   -p, --personal                   Sync (all) private dirs. Equivalent to --docs --pics --ao3
 
   --docs                           Sync private documents
@@ -36,7 +36,6 @@ usage:
   --ao3                            Sync ao3 stuff
   --workdocs                       Sync work documents
   --zotero                         Sync zotero dir
-  --calibre                        Sync calibre dir
   --storage                        Sync 'storage' dirs
 "
 
@@ -436,7 +435,6 @@ PICTURES="false"
 AO3="false"
 WORKDOCS="false"
 ZOTERO="false"
-CALIBRE="false"
 STORAGE="false"
 
 
@@ -496,10 +494,6 @@ while [[ $# > 0 ]]; do
 
     --zotero)
       ZOTERO="true"
-    ;;
-
-    --calibre)
-      CALIBRE="true"
     ;;
 
     --storage)
@@ -588,7 +582,6 @@ fi
 if [[ "$ALL" == "true" ]]; then
   WORKDOCS="true"
   ZOTERO="true"
-  CALIBRE="true"
   PICTURES="true"
   PERSONAL_DOCS="true"
   AO3="true"
@@ -598,7 +591,6 @@ fi
 if [[ "$WORK" == "true" ]]; then
   WORKDOCS="true"
   ZOTERO="true"
-  CALIBRE="true"
 fi
 
 if [[ "$PERSONAL" == "true" ]]; then
@@ -629,10 +621,6 @@ fi
 if [[ "$ZOTERO" == "true" ]]; then
   sync_dir $HOME/Zotero sync/Zotero sync_HD_default.prf
 fi
-if [[ "$CALIBRE" == "true" ]]; then
-  sync_dir $HOME/calibre_library sync/calibre_library sync_HD_default.prf
-fi
-
 
 if [[ "$PICTURES" == "true" ]]; then
   if [[ "$INCLUDE_PERSONAL" == "true" ]]; then
