@@ -62,9 +62,22 @@ done
 
 if [ ! -d "$BACKUP_DEST_DIR"/$HOMEDIR_BASENAME ]; then
   echo "Din't find target dir '""$BACKUP_DEST_DIR/$HOMEDIR_BASENAME""'"
-  #, trying second option
-  echo "Did you remember to mount the encrypted drives?"
-  exit 1
+
+  # trying second option
+  found_dir="false"
+  if [[ "$found_dir" == "false" ]]; then
+    BACKUP_DEST_DIR=/home/mivkov/Encfs/BACKUP_ASUS_WORK/  # where to store the backup
+    if [ ! -d "$BACKUP_DEST_DIR/$HOMEDIR_BASENAME" ]; then
+      echo "Din't find target dir '"$BACKUP_DEST_DIR/$HOMEDIR_BASENAME"', trying fourth option"
+    else
+      found_dir="true"
+    fi
+  fi
+
+  if [[ "$found_dir" == "false" ]]; then
+    echo "Did you remember to mount the encrypted drives?"
+    exit 1
+  fi
 fi
 
 echo Writing backup to "$BACKUP_DEST_DIR"
