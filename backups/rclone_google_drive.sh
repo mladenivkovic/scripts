@@ -58,7 +58,7 @@ Usage:
 
     --resync            Pass the --resync flag to rclone. Only works for --sync direction
     --force             Pass the --force flag to rclone. Only for bisync direction
-    --dry-run           Pass the --force flag to rclone. Only for bisync direction
+    --dry-run           Pass the --dry-run flag to rclone. Only for bisync direction
 
   Additional flags:
 
