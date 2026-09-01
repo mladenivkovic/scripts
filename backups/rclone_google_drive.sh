@@ -34,8 +34,7 @@ Usage:
 
   (selection of) directories to sync:
 
-    -a, --all           Sync all (hardcoded) dirs. Equivalent to --ao3 --calibre
-    TODO: Add Calibre
+    -a, --all           Sync all (hardcoded) dirs. Equivalent to --ao3
     --ao3               Sync ao3 stuff
 
     [ CURRENTLY DISABLED ] -w, --work          Sync (all) work dirs. Equivalent to --workdocs --zotero --calibre --teaching
@@ -163,10 +162,6 @@ else
 
       --zotero)
         ZOTERO="true"
-      ;;
-
-      --calibre)
-        CALIBRE="true"
       ;;
 
       --work-archive)
@@ -482,9 +477,6 @@ function rclone_cmd() {
 #   fi
 #   if [[ "$ZOTERO" == "true" ]]; then
 #     rclone_cmd $HOME/Zotero "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Zotero
-#   fi
-#   if [[ "$CALIBRE" == "true" ]]; then
-#     rclone_cmd $HOME/calibre_library "$GOOGLE_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/calibre_library
 #   fi
 # fi
 
