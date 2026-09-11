@@ -43,17 +43,19 @@ Usage:
 
   (selection of) directories to sync:
 
-    -a, --all           Sync all (hardcoded) dirs. Equivalent to --work --personal --storage
-    -w, --work          Sync (all) work dirs. Equivalent to --workdocs --zotero
-    -p, --personal      Sync (all) private dirs. Equivalent to --docs --pics --ao3
+    -a, --all           Sync all (hardcoded) dirs. Equivalent to --work --personal --storage. NOTE: does not include --archive
+    -w, --work          Sync (all) work dirs. Equivalent to --workdocs --zotero --code --templates
+    -p, --personal      Sync (all) private dirs. Equivalent to --docs --pics --ao3 --code --templates
+
     --docs              Sync private documents
     --pics, --pictures  Sync pictures
     --ao3               Sync ao3 stuff
     --code              Sync coding documents
+    --templates         Sync Templates dir.
     --workdocs          Sync work documents
     --zotero            Sync zotero dir
-
     --storage           Sync storage dir. This includes --archive and some other dirs not otherwise reachable by a flag
+
     --archive           Sync (all) archive dirs. Equivalent to --docs-archive --work-archive --mail-archive
     --docs-archive      Sync archive document dirs (not included in -w, -a, -p flags)
     --work-archive      Sync work archive dirs (not included in -w, -a, -p flags)
@@ -83,6 +85,7 @@ WORK="false"
 PERSONAL="false"
 PERSONAL_DOCS="false"
 CODE="false"
+TEMPLATES="false"
 PICTURES="false"
 AO3="false"
 WORKDOCS="false"
@@ -153,6 +156,10 @@ else
         CODE="true"
       ;;
 
+      --templates)
+        TEMPLATES="true"
+      ;;
+
       --pics | --pictures)
         PICTURES="true"
       ;;
@@ -221,7 +228,6 @@ else
     shift
   done
 fi
-
 
 # No mixed signals.
 if [[ "$PUSH" == "true" && "$PULL" == "true" ]]; then
@@ -336,12 +342,16 @@ fi
 if [[ "$WORK" == "true" ]]; then
   WORKDOCS="true"
   ZOTERO="true"
+  CODE="true"
+  TEMPLATES="true"
 fi
 
 if [[ "$PERSONAL" == "true" ]]; then
   PERSONAL_DOCS="true"
   PICTURES="true"
   AO3="true"
+  CODE="true"
+  TEMPLATES="true"
 fi
 
 if [[ "$ARCHIVE" == "true" ]]; then
@@ -455,6 +465,8 @@ function rclone_cmd() {
   EXTRA_FLAGS=""
   EXTRA_FLAGS="$EXTRA_FLAGS"" -l -v"
   EXTRA_FLAGS="$EXTRA_FLAGS"" --protondrive-replace-existing-draft=true"
+  # we should be able to get away with not providing a 2fa token any more if the initial ls login succeeded
+  # just in case, keep it anyway
   EXTRA_FLAGS="$EXTRA_FLAGS"" --protondrive-2fa=$TWOFATOKEN"
   # EXTRA_FLAGS="$EXTRA_FLAGS"" --backup-dir ""$REMOTE_BACKUP_DIR"
 
@@ -547,7 +559,12 @@ fi
 
 
 if [[ "$CODE" == "true" ]]; then
-  rclone_cmd $HOME/Documents/creative "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/coding --exclude=**/.git/** --exclude=**/.git
+  rclone_cmd $HOME/coding "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/coding --exclude=**/.git/** --exclude=**/.git
+fi
+
+
+if [[ "$TEMPLATES" == "true" ]]; then
+  rclone_cmd $HOME/Templates "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Templates --exclude=**/.git/** --exclude=**/.git
 fi
 
 
@@ -566,7 +583,7 @@ if [[ "$STORAGE" == "true" ]]; then
     exit
   fi
   if [[ "$DO_WORK_MACHINE" == "true" ]]; then
-    echo "Syncing storage... Are you sure you're on the right machine???"
+    echo "Syncing storage on work machine... Are you sure you're on the right machine???"
     exit
   fi
 
