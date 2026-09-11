@@ -352,6 +352,17 @@ fi
 
 
 
+# Trying to hack this somewhat: Run a useless ls with an updated token,
+# hoping that it'll keep the token updated
+# Do this before defining rclone_cmd to get TWOFATOKEN
+while true; do
+  read -p "Enter 2FA code: " TWOFATOKEN
+  break
+done
+
+rclone lsd "$PROTON_DRIVE_REMOTE_NAME":  --protondrive-2fa=$TWOFATOKEN > /dev/null
+
+
 
 
 function rclone_cmd() {
@@ -444,6 +455,7 @@ function rclone_cmd() {
   EXTRA_FLAGS=""
   EXTRA_FLAGS="$EXTRA_FLAGS"" -l -v"
   EXTRA_FLAGS="$EXTRA_FLAGS"" --protondrive-replace-existing-draft=true"
+  EXTRA_FLAGS="$EXTRA_FLAGS"" --protondrive-2fa=$TWOFATOKEN"
   # EXTRA_FLAGS="$EXTRA_FLAGS"" --backup-dir ""$REMOTE_BACKUP_DIR"
 
   if [[ "$FORCE" == "true" ]]; then
@@ -484,6 +496,8 @@ function rclone_cmd() {
 # --------------------------
 # Do the actual work
 # --------------------------
+
+
 
 if [[ "$WORKDOCS" == "true" ]]; then
   rclone_cmd $HOME/Work "$PROTON_DRIVE_REMOTE_NAME":"$REMOTE_SYNC_ROOT_DIR"/Work --exclude=**/.git/** --exclude=.git/**
